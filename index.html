@@ -243,6 +243,50 @@ input,select,textarea{font-family:inherit}
 .card-actions{display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
 .card-actions .btn{flex:1;padding:8px}
 
+/* ════ CAMPANHAS — TABELA INTERATIVA (estilo Utmify) ════ */
+.camp-toolbar{display:flex;flex-wrap:wrap;gap:11px;align-items:flex-end;margin-bottom:18px}
+.camp-f{display:flex;flex-direction:column;gap:5px;flex:1 1 150px;min-width:140px}
+.camp-f label{font-size:.67rem;text-transform:uppercase;letter-spacing:.06em;color:var(--txt-3);font-weight:700}
+.camp-f input,.camp-f select{background:var(--surf);border:1px solid var(--line-2);border-radius:10px;padding:9px 12px;color:var(--txt);font-size:.84rem;width:100%;transition:border-color .15s}
+.camp-f input:focus,.camp-f select:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(var(--glow),.1)}
+.camp-upd{display:flex;align-items:center;gap:7px;font-size:.74rem;color:var(--txt-3);padding-bottom:9px;white-space:nowrap}
+.camp-upd .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 7px var(--green)}
+.camp-tablewrap{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surf)}
+.camp-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.camp-table{width:100%;border-collapse:collapse;min-width:900px;font-size:.85rem}
+.camp-table thead th{position:sticky;top:0;background:var(--surf-2);text-align:right;padding:13px 15px;font-size:.69rem;text-transform:uppercase;letter-spacing:.05em;color:var(--txt-3);font-weight:700;white-space:nowrap;border-bottom:1px solid var(--line)}
+.camp-table thead th.l{text-align:left}
+.camp-table tbody td{padding:12px 15px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle;color:var(--txt-2)}
+.camp-table tbody td.l{text-align:left}
+.camp-table tbody tr{transition:background .12s}
+.camp-table tbody tr:hover{background:var(--surf-2)}
+.camp-num{font-family:var(--display);font-weight:700;color:var(--txt)}
+.camp-num.pos{color:var(--green)}.camp-num.neg{color:var(--red)}
+.camp-sub{font-size:.67rem;color:var(--txt-3);margin-top:2px}
+.camp-name{font-family:var(--display);font-weight:600;color:var(--txt);font-size:.9rem;display:flex;align-items:center;gap:7px}
+.camp-name small{display:block;font-weight:400;font-size:.72rem;color:var(--txt-3);margin-top:3px}
+.camp-sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.camp-sync-dot.live{background:var(--green);box-shadow:0 0 6px rgba(52,230,168,.6)}
+.camp-sync-dot.off{background:var(--txt-3)}
+.camp-sync-dot.err{background:var(--red);box-shadow:0 0 6px rgba(255,92,114,.6)}
+.camp-foot td{background:var(--surf-2);font-family:var(--display);font-weight:800;color:var(--txt);border-top:2px solid var(--line-2);border-bottom:none}
+/* toggle switch (liga/desliga campanha) */
+.tgl{position:relative;display:inline-block;width:42px;height:23px;cursor:pointer;vertical-align:middle;flex-shrink:0}
+.tgl .track{position:absolute;inset:0;background:var(--surf-3);border:1px solid var(--line-2);border-radius:20px;transition:all .2s}
+.tgl .thumb{position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:var(--txt-3);transition:all .2s}
+.tgl.on .track{background:rgba(52,230,168,.26);border-color:var(--green)}
+.tgl.on .thumb{transform:translateX(19px);background:var(--green)}
+.tgl.paused .track{background:rgba(255,92,114,.18);border-color:rgba(255,92,114,.4)}
+.camp-act{display:inline-flex;gap:6px}
+.camp-act button{width:30px;height:30px;border-radius:8px;background:var(--surf-3);color:var(--txt-2);font-size:.85rem;display:inline-flex;align-items:center;justify-content:center;transition:all .15s}
+.camp-act button:hover{color:var(--txt);background:var(--line-2)}
+.camp-act button.del:hover{color:var(--red);background:rgba(255,92,114,.12)}
+.camp-empty{padding:50px 20px;text-align:center;color:var(--txt-3)}
+.camp-empty .ic{font-size:2.6rem;margin-bottom:12px;opacity:.6}
+.camp-empty p{margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinning{display:inline-block;animation:spin .8s linear infinite}
+
 /* TAREFAS */
 .task{display:flex;align-items:flex-start;gap:13px;background:var(--surf);border:1px solid var(--line);border-radius:13px;padding:15px 17px;transition:border-color .15s}
 .task:hover{border-color:var(--line-2)}
@@ -447,8 +491,21 @@ input,select,textarea{font-family:inherit}
 
     <!-- CAMPANHAS -->
     <section class="section" id="sec-campanhas">
-      <div class="sec-head"><div><h2>Campanhas</h2><p>O que está no ar, com qual criativo e orçamento</p></div><button class="btn btn-primary" onclick="abrirModalCampanha()">+ Nova campanha</button></div>
-      <div class="grid" id="lista-campanhas"></div>
+      <div class="sec-head">
+        <div><h2>Campanhas</h2><p>Analise tudo da Meta sem sair da plataforma</p></div>
+        <div class="dash-tools">
+          <button class="btn btn-sync" id="campRefreshBtn" onclick="refreshCampanhas()">↻ Atualizar dados</button>
+          <button class="btn btn-primary" onclick="abrirModalCampanha()">+ Nova campanha</button>
+        </div>
+      </div>
+      <div class="camp-toolbar">
+        <div class="camp-f"><label>Nome da campanha</label><input id="campFNome" oninput="renderCampanhas()" placeholder="Filtrar por nome"></div>
+        <div class="camp-f"><label>Status</label><select id="campFStatus" onchange="renderCampanhas()"><option value="">Qualquer</option><option value="rodando">Rodando</option><option value="pausado">Pausado</option><option value="teste">Em teste</option></select></div>
+        <div class="camp-f"><label>Período</label><select id="campFPeriodo" onchange="setPeriodoCampanhas(this.value)"><option value="today">Hoje</option><option value="yesterday">Ontem</option><option value="last_7d">Últimos 7 dias</option><option value="last_14d">Últimos 14 dias</option><option value="last_30d">Últimos 30 dias</option><option value="maximum">Máximo</option></select></div>
+        <div class="camp-f"><label>Produto</label><select id="campFProduto" onchange="renderCampanhas()"><option value="">Qualquer</option></select></div>
+        <div class="camp-upd" id="campUpd" style="display:none"><span class="dot"></span><span id="campUpdTime">—</span></div>
+      </div>
+      <div id="lista-campanhas"></div>
     </section>
 
     <!-- TAREFAS -->
@@ -591,7 +648,8 @@ function dashMetrics(){
     var cv=Number(m.conversoes)||0;conv+=cv;
     if(c.status==='rodando')orc+=Number(c.orcamento)||0;
     var p=DB.produtos.find(function(x){return x.id===c.produtoId});
-    fat+=cv*(p?Number(p.ticket)||0:0);
+    /* usa faturamento real da Meta quando disponível; senão estima por conversões × ticket */
+    fat+=(m.faturamento!==''&&m.faturamento!=null)?Number(m.faturamento)||0:cv*(p?Number(p.ticket)||0:0);
   });
   return {gasto:gasto,cliques:cliques,conv:conv,orc:orc,fat:fat,lucro:fat-gasto,
     roas:gasto>0?fat/gasto:0,cpa:conv>0?gasto/conv:0,
@@ -759,23 +817,116 @@ function assetHtml(a){
   return '<div class="creative-preview">'+media+'<div class="creative-caption"><span>'+tipo+' · '+nome+'</span>'+(a.url?'<a href="'+esc(a.url)+'" target="_blank" rel="noopener" style="color:var(--cyan);text-decoration:none">abrir link</a>':'')+'</div></div>';
 }
 
-function renderCampanhas(){
-  var el=document.getElementById('lista-campanhas');
-  if(DB.campanhas.length===0){el.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="ic">⚡</div><p>Cadastre sua primeira campanha</p><button class="btn btn-primary" onclick="abrirModalCampanha()">+ Nova campanha</button></div>';return}
-  el.innerHTML='';DB.campanhas.forEach(function(c){el.appendChild(cardCampanha(c))});
-}
-function cardCampanha(c){
-  var div=document.createElement('div');div.className='card';
+/* período selecionado para a Meta (date_preset) */
+var CAMP_PERIODO=(function(){try{return localStorage.getItem('centralops_camp_periodo')||'last_30d'}catch(e){return 'last_30d'}})();
+function campIntegrada(c){return !!(c.metaApiUrl||(c.metaCampaignId&&c.metaAccessToken))}
+function campMetricas(c){
   var m=c.metricas||{};
-  var metricas=(m.gasto||m.impressoes||m.cliques||m.ctr)?'<div class="metric-row">'+metricHtml('Gasto',fmtMoney(m.gasto))+metricHtml('Cliques',fmtNum(m.cliques))+metricHtml('CTR',m.ctr?esc(m.ctr)+'%':'--')+metricHtml('Compras/Leads',fmtNum(m.conversoes))+'</div>':'';
-  var sync=(c.metaCampaignId||c.metaApiUrl)?'<button class="btn btn-sync" onclick="atualizarCampanhaMeta(\''+c.id+'\')">Atualizar Meta</button>':'';
-  div.innerHTML='<div class="card-top"><div><div class="card-title">'+esc(c.nome)+'</div><div class="card-meta">'+esc(nomeProduto(c.produtoId))+(m.atualizadoEm?' · atualizado '+esc(dataCurta(m.atualizadoEm)):'')+'</div></div><span class="pill '+c.status+'">'+labelStatus(c.status)+'</span></div><div class="chips">'+(c.orcamento?'<span class="chip">📊 <b>R$ '+esc(c.orcamento)+'</b>/dia</span>':'')+(c.cpa?'<span class="chip">🎯 CPA <b>R$ '+esc(c.cpa)+'</b></span>':'')+(c.criativo?'<span class="chip">🎬 '+esc(c.criativo)+'</span>':'')+(c.plataforma?'<span class="chip">📱 '+esc(c.plataforma)+'</span>':'')+'</div>'+metricas+'<div class="card-actions">'+sync+'<button class="btn btn-ghost" onclick="abrirModalCampanha(\''+c.id+'\')">Editar</button><button class="btn btn-danger" onclick="delCampanha(\''+c.id+'\')">Excluir</button></div>';
-  return div;
+  var gasto=Number(m.gasto)||0,cliques=Number(m.cliques)||0,conv=Number(m.conversoes)||0,imp=Number(m.impressoes)||0;
+  var ctr=(m.ctr!==''&&m.ctr!=null)?Number(m.ctr):(imp>0?cliques/imp*100:null);
+  var cpm=(m.cpm!==''&&m.cpm!=null)?Number(m.cpm):(imp>0?gasto/imp*1000:null);
+  var p=DB.produtos.find(function(x){return x.id===c.produtoId});
+  var ticket=p?Number(p.ticket)||0:0;
+  var fat=(m.faturamento!==''&&m.faturamento!=null)?Number(m.faturamento):conv*ticket;
+  var cpa=(m.cpa!==''&&m.cpa!=null)?Number(m.cpa):(conv>0?gasto/conv:null);
+  return {gasto:gasto,cliques:cliques,conv:conv,imp:imp,ctr:ctr,cpm:cpm,fat:fat,cpa:cpa,lucro:fat-gasto};
 }
-function metricHtml(k,v){return '<div class="metric"><div class="k">'+esc(k)+'</div><div class="v">'+(v||'--')+'</div></div>'}
-function fmtNum(v){return (v===0||v)?String(v):'--'}
-function fmtMoney(v){if(v===0||v)return 'R$ '+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});return '--'}
+function campanhasFiltradas(){
+  var g=function(id){var e=document.getElementById(id);return e?e.value:''};
+  var nome=(g('campFNome')||'').toLowerCase().trim(),st=g('campFStatus'),prod=g('campFProduto');
+  return DB.campanhas.filter(function(c){
+    if(nome&&(c.nome||'').toLowerCase().indexOf(nome)<0)return false;
+    if(st&&c.status!==st)return false;
+    if(prod&&c.produtoId!==prod)return false;
+    return true;
+  });
+}
+function preencherFiltroProdutos(){
+  var sel=document.getElementById('campFProduto');if(!sel)return;
+  var atual=sel.value;
+  sel.innerHTML='<option value="">Qualquer</option>'+DB.produtos.map(function(p){return '<option value="'+p.id+'">'+esc(p.nome)+'</option>'}).join('');
+  sel.value=atual;
+  var per=document.getElementById('campFPeriodo');if(per)per.value=CAMP_PERIODO;
+}
+function tempoRelativo(ts){
+  if(!ts)return '';var s=Math.floor((Date.now()-new Date(ts).getTime())/1000);
+  if(s<5)return 'agora mesmo';if(s<60)return 'há '+s+'s';
+  var mi=Math.floor(s/60);if(mi<60)return 'há '+mi+' min';
+  var h=Math.floor(mi/60);if(h<24)return 'há '+h+'h';
+  return 'há '+Math.floor(h/24)+'d';
+}
 function dataCurta(v){try{return new Date(v).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}catch(e){return v||''}}
+
+function renderCampanhas(){
+  var el=document.getElementById('lista-campanhas');if(!el)return;
+  preencherFiltroProdutos();
+  if(DB.campanhas.length===0){
+    el.innerHTML='<div class="camp-tablewrap"><div class="camp-empty"><div class="ic">⚡</div><p>Cadastre sua primeira campanha e conecte o token da Meta para puxar os dados automaticamente.</p><button class="btn btn-primary" onclick="abrirModalCampanha()">+ Nova campanha</button></div></div>';
+    atualizarRelogioCampanhas();return;
+  }
+  var lista=campanhasFiltradas();
+  var T={gasto:0,fat:0,conv:0,cliques:0,imp:0,orc:0};
+  var rows=lista.map(function(c){
+    var mm=campMetricas(c);
+    T.gasto+=mm.gasto;T.fat+=mm.fat;T.conv+=mm.conv;T.cliques+=mm.cliques;T.imp+=mm.imp;
+    if(c.status==='rodando')T.orc+=Number(c.orcamento)||0;
+    var on=c.status==='rodando';
+    var dot=c._syncErro?'<span class="camp-sync-dot err" title="Erro: '+esc(c._syncErro)+'"></span>':(campIntegrada(c)?'<span class="camp-sync-dot live" title="Integrada à Meta"></span>':'<span class="camp-sync-dot off" title="Sem integração — edite e adicione o token"></span>');
+    var tgl='<span class="tgl '+(on?'on':(c.status==='pausado'?'paused':''))+'" title="'+labelStatus(c.status)+'" onclick="toggleCampStatus(\''+c.id+'\')"><span class="track"></span><span class="thumb"></span></span>';
+    return '<tr>'
+      +'<td class="l">'+tgl+'</td>'
+      +'<td class="l"><div class="camp-name">'+dot+esc(c.nome)+'</div><small>'+esc(nomeProduto(c.produtoId))+(c.criativo?' · 🎬 '+esc(c.criativo):'')+'</small></td>'
+      +'<td><span class="camp-num">'+(c.orcamento?brl(c.orcamento):'--')+'</span><div class="camp-sub">diário</div></td>'
+      +'<td><span class="camp-num pos">'+brl(mm.fat)+'</span></td>'
+      +'<td><span class="camp-num">'+intBR(mm.conv)+'</span></td>'
+      +'<td>'+(mm.ctr!=null?mm.ctr.toFixed(2)+'%':'--')+'</td>'
+      +'<td>'+(mm.cpa!=null?brl(mm.cpa):'N/A')+'</td>'
+      +'<td>'+(mm.cpm!=null?brl(mm.cpm):'--')+'</td>'
+      +'<td>'+intBR(mm.cliques)+'</td>'
+      +'<td class="l"><span class="camp-act"><button onclick="abrirModalCampanha(\''+c.id+'\')" title="Editar">✎</button><button class="del" onclick="delCampanha(\''+c.id+'\')" title="Excluir">✕</button></span></td>'
+    +'</tr>';
+  }).join('');
+  if(!lista.length)rows='<tr><td colspan="10" class="l" style="text-align:center;padding:34px;color:var(--txt-3)">Nenhuma campanha encontrada com esses filtros.</td></tr>';
+  var ctrTot=T.imp>0?(T.cliques/T.imp*100).toFixed(2)+'%':'--';
+  var cpaTot=T.conv>0?brl(T.gasto/T.conv):'N/A';
+  var foot='<tr class="camp-foot"><td class="l"></td><td class="l">'+lista.length+' campanha(s)</td><td><span class="camp-num">'+(T.orc?brl(T.orc):'--')+'</span></td><td><span class="camp-num">'+brl(T.fat)+'</span></td><td>'+intBR(T.conv)+'</td><td>'+ctrTot+'</td><td>'+cpaTot+'</td><td>--</td><td>'+intBR(T.cliques)+'</td><td></td></tr>';
+  el.innerHTML='<div class="camp-tablewrap"><div class="camp-scroll"><table class="camp-table">'
+    +'<thead><tr><th class="l">Status</th><th class="l">Campanha</th><th>Orçamento</th><th>Faturamento</th><th>Vendas</th><th>CTR</th><th>CPA</th><th>CPM</th><th>Cliques</th><th class="l">Ações</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody><tfoot>'+foot+'</tfoot></table></div></div>';
+  atualizarRelogioCampanhas();
+}
+function atualizarRelogioCampanhas(){
+  var box=document.getElementById('campUpd'),lbl=document.getElementById('campUpdTime');if(!box||!lbl)return;
+  var ult=0;DB.campanhas.forEach(function(c){var t=c.metricas&&c.metricas.atualizadoEm?new Date(c.metricas.atualizadoEm).getTime():0;if(t>ult)ult=t});
+  if(ult){box.style.display='flex';lbl.textContent='Atualizado '+tempoRelativo(ult);}
+  else box.style.display='none';
+}
+window.toggleCampStatus=function(id){
+  var c=DB.campanhas.find(function(x){return x.id===id});if(!c)return;
+  c.status=c.status==='rodando'?'pausado':'rodando';
+  salvar();renderCampanhas();updateCounts();if(secAtual==='dash')renderDash();
+  toast(c.status==='rodando'?'Campanha ativada':'Campanha pausada');
+};
+window.setPeriodoCampanhas=function(v){
+  CAMP_PERIODO=v;try{localStorage.setItem('centralops_camp_periodo',v)}catch(e){}
+  if(DB.campanhas.some(campIntegrada))refreshCampanhas();else renderCampanhas();
+};
+window.refreshCampanhas=function(){
+  var fila=DB.campanhas.filter(campIntegrada);
+  if(!fila.length){toast('Nenhuma campanha integrada. Edite uma campanha e cole o token da Meta.');return}
+  var btn=document.getElementById('campRefreshBtn');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinning">↻</span> Atualizando...';}
+  toast('Buscando métricas na Meta...');
+  Promise.all(fila.map(function(c){
+    return buscarMetricasCampanha(c).then(function(d){aplicarMetricasMeta(c,d);c._syncErro=null}).catch(function(e){c._syncErro=(e&&e.message)||'falha ao buscar'});
+  })).then(function(){
+    salvar();
+    if(btn){btn.disabled=false;btn.textContent='↻ Atualizar dados';}
+    renderCampanhas();if(secAtual==='dash')renderDash();
+    var falhas=fila.filter(function(c){return c._syncErro}).length;
+    toast(falhas?(falhas+' campanha(s) com erro — confira o token'):'Métricas atualizadas ✓');
+  });
+};
 
 function renderTarefas(){
   var el=document.getElementById('lista-tarefas');
@@ -896,29 +1047,31 @@ window.processAssetFile=function(input){var file=input.files&&input.files[0],row
 window.salvarProduto=function(id){var nome=val('f-nome');if(!nome){toast('Dê um nome');return}var assets=[];document.querySelectorAll('#assets-box .asset-row').forEach(function(r){var t=r.querySelector('.a-tipo').value,n=r.querySelector('.a-nome').value,u=r.querySelector('.a-url').value,d=r.querySelector('.a-data').value,m=r.querySelector('.a-mime').value,f=r.querySelector('.a-file').value;if(n||u||d)assets.push({tipo:t,nome:n||f||t,url:u,dataUrl:d,mime:m,fileName:f})});var obj={nome:nome,negocioId:val('f-negocio'),status:val('f-status'),ticket:val('f-ticket'),plataforma:val('f-plataforma'),assets:assets};if(id)Object.assign(DB.produtos.find(function(x){return x.id===id}),obj);else{obj.id=uid();DB.produtos.push(obj)}salvar();fecharModal();afterChange('produtos');toast('Produto salvo ✓')};
 window.delProduto=function(id){if(!confirm('Excluir produto?'))return;DB.produtos=DB.produtos.filter(function(x){return x.id!==id});salvar();fecharPainel();afterChange('produtos');toast('Excluído')};
 
-window.abrirModalCampanha=function(id){var c=id?DB.campanhas.find(function(x){return x.id===id}):{};var m=c.metricas||{};ov.innerHTML='<div class="modal"><h3>'+(id?'Editar':'Nova')+' campanha <span class="x" onclick="fecharModal()">✕</span></h3><div class="field"><label>Nome</label><input id="f-nome" value="'+esc(c.nome||'')+'" placeholder="Ex: Educando - Conversão"></div><div class="field"><label>Produto</label>'+selProd(c.produtoId)+'</div><div class="field"><label>Status</label><select id="f-status">'+optStatus('teste','Em teste',c.status)+optStatus('rodando','Rodando',c.status)+optStatus('pausado','Pausada',c.status)+'</select></div><div class="field"><label>Plataforma</label><input id="f-plataforma" value="'+esc(c.plataforma||'')+'" placeholder="Meta Ads"></div><div class="field"><label>Orçamento diário (R$)</label><input id="f-orcamento" value="'+esc(c.orcamento||'')+'" placeholder="50"></div><div class="field"><label>CPA atual (R$)</label><input id="f-cpa" value="'+esc(c.cpa||'')+'" placeholder="15"></div><div class="field"><label>Criativo ativo</label><input id="f-criativo" value="'+esc(c.criativo||'')+'" placeholder="Ex: Vídeo gancho v2"></div><div class="sync-box"><div class="sync-title">Integração automática</div><div class="sync-help">Cole um Campaign ID + token da Meta ou uma URL própria que retorne JSON. O token fica salvo só neste navegador.</div><div class="sync-grid"><div class="field"><label>Campaign ID da Meta</label><input id="f-meta-campaign" value="'+esc(c.metaCampaignId||'')+'" placeholder="120000000000000"></div><div class="field"><label>Token de acesso Meta</label><input id="f-meta-token" value="'+esc(c.metaAccessToken||'')+'" placeholder="EAAB..."></div><div class="field"><label>URL de métricas externa (opcional)</label><input id="f-meta-url" value="'+esc(c.metaApiUrl||'')+'" placeholder="https://seu-backend.com/meta/campanha/123"></div></div><div class="field"><label><input id="f-auto-sync" type="checkbox" '+(c.autoSync?'checked':'')+' style="width:auto;margin-right:7px"> atualizar automaticamente ao abrir</label></div>'+(m.atualizadoEm?'<div class="sync-status ok">Última leitura: '+esc(dataCurta(m.atualizadoEm))+'</div>':'')+'</div><div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>'+(id?'<button class="btn btn-sync" onclick="salvarCampanha(\''+id+'\',true)">Buscar dados</button>':'')+'<button class="btn btn-primary" onclick="salvarCampanha(\''+(id||'')+'\')">Salvar</button></div></div>';ov.classList.add('open')};
+window.abrirModalCampanha=function(id){var c=id?DB.campanhas.find(function(x){return x.id===id}):{autoSync:true};var m=c.metricas||{};ov.innerHTML='<div class="modal"><h3>'+(id?'Editar':'Nova')+' campanha <span class="x" onclick="fecharModal()">✕</span></h3><div class="field"><label>Nome</label><input id="f-nome" value="'+esc(c.nome||'')+'" placeholder="Ex: Educando - Conversão"></div><div class="field"><label>Produto</label>'+selProd(c.produtoId)+'</div><div class="field"><label>Status</label><select id="f-status">'+optStatus('teste','Em teste',c.status)+optStatus('rodando','Rodando',c.status)+optStatus('pausado','Pausada',c.status)+'</select></div><div class="field"><label>Plataforma</label><input id="f-plataforma" value="'+esc(c.plataforma||'')+'" placeholder="Meta Ads"></div><div class="field"><label>Orçamento diário (R$)</label><input id="f-orcamento" value="'+esc(c.orcamento||'')+'" placeholder="50"></div><div class="field"><label>CPA atual (R$)</label><input id="f-cpa" value="'+esc(c.cpa||'')+'" placeholder="15"></div><div class="field"><label>Criativo ativo</label><input id="f-criativo" value="'+esc(c.criativo||'')+'" placeholder="Ex: Vídeo gancho v2"></div><div class="sync-box"><div class="sync-title">Integração automática</div><div class="sync-help">Cole um Campaign ID + token da Meta ou uma URL própria que retorne JSON. O token fica salvo só neste navegador.</div><div class="sync-grid"><div class="field"><label>Campaign ID da Meta</label><input id="f-meta-campaign" value="'+esc(c.metaCampaignId||'')+'" placeholder="120000000000000"></div><div class="field"><label>Token de acesso Meta</label><input id="f-meta-token" value="'+esc(c.metaAccessToken||'')+'" placeholder="EAAB..."></div><div class="field"><label>URL de métricas externa (opcional)</label><input id="f-meta-url" value="'+esc(c.metaApiUrl||'')+'" placeholder="https://seu-backend.com/meta/campanha/123"></div></div><div class="field"><label><input id="f-auto-sync" type="checkbox" '+(c.autoSync?'checked':'')+' style="width:auto;margin-right:7px"> atualizar automaticamente ao abrir</label></div>'+(m.atualizadoEm?'<div class="sync-status ok">Última leitura: '+esc(dataCurta(m.atualizadoEm))+'</div>':'')+'</div><div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>'+(id?'<button class="btn btn-sync" onclick="salvarCampanha(\''+id+'\',true)">Buscar dados</button>':'')+'<button class="btn btn-primary" onclick="salvarCampanha(\''+(id||'')+'\')">Salvar</button></div></div>';ov.classList.add('open')};
 window.salvarCampanha=function(id,syncDepois){var nome=val('f-nome');if(!nome){toast('Dê um nome');return}var obj={nome:nome,produtoId:val('f-produto'),status:val('f-status'),plataforma:val('f-plataforma'),orcamento:val('f-orcamento'),cpa:val('f-cpa'),criativo:val('f-criativo'),metaCampaignId:val('f-meta-campaign'),metaAccessToken:val('f-meta-token'),metaApiUrl:val('f-meta-url'),autoSync:!!document.getElementById('f-auto-sync')&&document.getElementById('f-auto-sync').checked};var camp;if(id){camp=DB.campanhas.find(function(x){return x.id===id});Object.assign(camp,obj)}else{obj.id=uid();DB.campanhas.push(obj);camp=obj}salvar();if(syncDepois){atualizarCampanhaMeta(camp.id,true);return}fecharModal();afterChange('campanhas');toast('Campanha salva ✓')};
 window.atualizarCampanhaMeta=function(id,manterModal){var c=DB.campanhas.find(function(x){return x.id===id});if(!c)return;if(!c.metaApiUrl&&(!c.metaCampaignId||!c.metaAccessToken)){toast('Informe Campaign ID + token ou URL');return}toast('Buscando métricas...');buscarMetricasCampanha(c).then(function(dados){aplicarMetricasMeta(c,dados);salvar();if(manterModal)abrirModalCampanha(id);else afterChange('campanhas');toast('Métricas atualizadas ✓')}).catch(function(err){toast((err&&err.message)||'Erro ao buscar métricas')})};
 function buscarMetricasCampanha(c){
-  if(c.metaApiUrl){return fetch(c.metaApiUrl).then(checkJson)}
+  var per=encodeURIComponent(CAMP_PERIODO||'last_30d');
+  if(c.metaApiUrl){var sep=c.metaApiUrl.indexOf('?')<0?'?':'&';return fetch(c.metaApiUrl+sep+'date_preset='+per).then(checkJson)}
   var token=encodeURIComponent(c.metaAccessToken),cid=encodeURIComponent(c.metaCampaignId),base='https://graph.facebook.com/v19.0/';
   var infoUrl=base+cid+'?fields=name,status,effective_status,daily_budget&access_token='+token;
-  var insUrl=base+cid+'/insights?date_preset=today&fields=spend,impressions,clicks,ctr,cpc,cpm,actions,cost_per_action_type&access_token='+token;
+  var insUrl=base+cid+'/insights?date_preset='+per+'&fields=spend,impressions,clicks,ctr,cpc,cpm,actions,action_values,cost_per_action_type&access_token='+token;
   return Promise.all([fetch(infoUrl).then(checkJson),fetch(insUrl).then(checkJson)]).then(function(r){return {campaign:r[0],insights:(r[1].data&&r[1].data[0])||{}}})
 }
 function checkJson(r){if(!r.ok)throw new Error('API respondeu '+r.status);return r.json().then(function(j){if(j.error)throw new Error(j.error.message||'Erro na API');return j})}
 function aplicarMetricasMeta(c,d){
-  var camp=d.campaign||d,ins=d.insights||d.metricas||d,conv=acharAcao(ins.actions),cpa=acharCusto(ins.cost_per_action_type);
+  var camp=d.campaign||d,ins=d.insights||d.metricas||d,conv=acharAcao(ins.actions),cpa=acharCusto(ins.cost_per_action_type),fat=acharValor(ins.action_values);
   if(camp.name)c.nome=camp.name;
   if(camp.effective_status||camp.status)c.status=mapMetaStatus(camp.effective_status||camp.status);
   if(camp.daily_budget)c.orcamento=(Number(camp.daily_budget)/100).toFixed(2);
   else if(d.orcamento)c.orcamento=String(d.orcamento);
   if(cpa)c.cpa=Number(cpa).toFixed(2);
   else if(d.cpa)c.cpa=String(d.cpa);
-  c.metricas={gasto:num(ins.spend||d.gasto),impressoes:num(ins.impressions||d.impressoes),cliques:num(ins.clicks||d.cliques),ctr:ins.ctr?Number(ins.ctr).toFixed(2):(d.ctr||''),cpc:num(ins.cpc||d.cpc),cpm:num(ins.cpm||d.cpm),conversoes:conv||num(d.conversoes),atualizadoEm:new Date().toISOString()};
+  c.metricas={gasto:num(ins.spend||d.gasto),impressoes:num(ins.impressions||d.impressoes),cliques:num(ins.clicks||d.cliques),ctr:ins.ctr?Number(ins.ctr).toFixed(2):(d.ctr||''),cpc:num(ins.cpc||d.cpc),cpm:num(ins.cpm||d.cpm),conversoes:conv||num(d.conversoes),faturamento:(fat||num(d.faturamento)),cpa:cpa?Number(cpa).toFixed(2):(d.cpa||''),periodo:CAMP_PERIODO,atualizadoEm:new Date().toISOString()};
 }
 function acharAcao(arr){arr=arr||[];var keys=['purchase','offsite_conversion.fb_pixel_purchase','lead','onsite_conversion.lead_grouped','complete_registration'];for(var i=0;i<keys.length;i++){var a=arr.find(function(x){return x.action_type===keys[i]});if(a)return Number(a.value)}return 0}
 function acharCusto(arr){arr=arr||[];var keys=['purchase','offsite_conversion.fb_pixel_purchase','lead','onsite_conversion.lead_grouped','complete_registration'];for(var i=0;i<keys.length;i++){var a=arr.find(function(x){return x.action_type===keys[i]});if(a)return a.value}return ''}
+function acharValor(arr){arr=arr||[];var keys=['purchase','offsite_conversion.fb_pixel_purchase','omni_purchase'];for(var i=0;i<keys.length;i++){var a=arr.find(function(x){return x.action_type===keys[i]});if(a)return Number(a.value)}return 0}
 function mapMetaStatus(s){s=String(s||'').toUpperCase();if(s==='ACTIVE'||s==='RODANDO')return 'rodando';if(s==='PAUSED'||s==='CAMPAIGN_PAUSED'||s==='ADSET_PAUSED'||s==='PAUSADO'||s==='PAUSADA')return 'pausado';return 'teste'}
 function num(v){return (v===0||v)?Number(v):''}
 window.delCampanha=function(id){if(!confirm('Excluir campanha?'))return;DB.campanhas=DB.campanhas.filter(function(x){return x.id!==id});salvar();fecharPainel();afterChange('campanhas');toast('Excluída')};
@@ -941,7 +1094,7 @@ function autoSyncCampanhas(){
   var fila=DB.campanhas.filter(function(c){return c.autoSync&&(c.metaApiUrl||(c.metaCampaignId&&c.metaAccessToken))&&(!c._lastAutoSync||agora-c._lastAutoSync>AUTO_SYNC_MS)});
   if(!fila.length)return;
   autoSyncRodando=true;
-  Promise.all(fila.map(function(c){c._lastAutoSync=agora;return buscarMetricasCampanha(c).then(function(d){aplicarMetricasMeta(c,d)}).catch(function(){})})).then(function(){autoSyncRodando=false;salvar();if(secAtual==='dash')renderDash();if(secAtual==='campanhas')renderCampanhas()});
+  Promise.all(fila.map(function(c){c._lastAutoSync=agora;return buscarMetricasCampanha(c).then(function(d){aplicarMetricasMeta(c,d);c._syncErro=null}).catch(function(e){c._syncErro=(e&&e.message)||'falha'})})).then(function(){autoSyncRodando=false;salvar();if(secAtual==='dash')renderDash();if(secAtual==='campanhas')renderCampanhas()});
 }
 
 function updateCounts(){
