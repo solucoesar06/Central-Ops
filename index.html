@@ -26,14 +26,18 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 input,select,textarea{font-family:inherit}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:5px}
 
-/* ════ FUNDO ESTILO LEONA — DARK ROXO + NÉVOA + ESTRELAS ════ */
-.aurora{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none;background:radial-gradient(120% 90% at 50% -10%,#150C28 0%,#0C0816 42%,var(--bg) 100%)}
-.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.4;will-change:transform}
-.blob.b1{width:58vw;height:58vw;background:radial-gradient(circle,rgba(139,92,246,.42),transparent 66%);top:-22%;left:-12%}
-.blob.b2{width:54vw;height:54vw;background:radial-gradient(circle,rgba(110,139,255,.32),transparent 66%);top:28%;right:-16%}
-.blob.b3{width:46vw;height:46vw;background:radial-gradient(circle,rgba(168,120,255,.24),transparent 68%);bottom:-18%;left:22%}
-/* estrelinhas discretas (Leona) */
-.stars{position:fixed;inset:0;z-index:0;pointer-events:none;
+/* ════ FUNDO LEVE E DINÂMICO — AURORA CSS (GPU, sem filtros SVG) ════ */
+.bg-wrap{position:fixed;inset:0;z-index:0;pointer-events:none;will-change:transform}
+.aurora{position:absolute;inset:-6%;overflow:hidden;background:radial-gradient(120% 90% at 50% -10%,#150C28 0%,#0C0816 42%,var(--bg) 100%)}
+.blob{position:absolute;border-radius:50%;filter:blur(72px);opacity:.42;will-change:transform;transform:translateZ(0);backface-visibility:hidden}
+.blob.b1{width:52vw;height:52vw;background:radial-gradient(circle,rgba(139,92,246,.46),transparent 66%);top:-20%;left:-10%;animation:drift1 26s ease-in-out infinite}
+.blob.b2{width:48vw;height:48vw;background:radial-gradient(circle,rgba(110,139,255,.36),transparent 66%);top:26%;right:-14%;animation:drift2 32s ease-in-out infinite}
+.blob.b3{width:42vw;height:42vw;background:radial-gradient(circle,rgba(168,120,255,.28),transparent 68%);bottom:-16%;left:24%;animation:drift3 29s ease-in-out infinite}
+@keyframes drift1{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(7vw,5vw,0) scale(1.06)}}
+@keyframes drift2{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(-8vw,6vw,0) scale(1.08)}}
+@keyframes drift3{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(6vw,-5vw,0) scale(.94)}}
+/* estrelinhas discretas */
+.stars{position:absolute;inset:-6%;pointer-events:none;
   background-image:
     radial-gradient(1px 1px at 12% 22%,rgba(199,189,255,.9),transparent),
     radial-gradient(1px 1px at 28% 68%,rgba(199,189,255,.7),transparent),
@@ -47,15 +51,13 @@ input,select,textarea{font-family:inherit}
     radial-gradient(1px 1px at 36% 40%,rgba(199,189,255,.45),transparent);
   background-repeat:no-repeat;animation:twinkle 7s ease-in-out infinite}
 @keyframes twinkle{0%,100%{opacity:.5}50%{opacity:.85}}
-.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+.grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
 
-/* ════ ETHERAL SHADOWS (sombras roxas orgânicas no fundo) ════ */
-.ethereal{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:.45;mix-blend-mode:screen}
-.eth-inner{position:absolute;inset:-80px;filter:url(#ethFilter) blur(4px)}
-.eth-shadow{position:absolute;inset:0;background-color:#8B5CF6;
-  -webkit-mask-image:url('https://framerusercontent.com/images/ceBGguIpUU8luwByxuQz79t7To.png');mask-image:url('https://framerusercontent.com/images/ceBGguIpUU8luwByxuQz79t7To.png');
-  -webkit-mask-size:cover;mask-size:cover;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-position:center;mask-position:center}
-.eth-noise{position:absolute;inset:0;background-image:url("https://framerusercontent.com/images/g0QcWrxr87K0ufOxIUFBakwYA8.png");background-size:240px;background-repeat:repeat;opacity:.25;mix-blend-mode:overlay}
+/* respeita quem prefere menos movimento */
+@media(prefers-reduced-motion:reduce){
+  .blob,.stars,.intro h1 .grad{animation:none!important}
+  *{scroll-behavior:auto!important}
+}
 
 /* ════ ABERTURA CINEMATOGRÁFICA ════ */
 .intro{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
@@ -93,7 +95,7 @@ input,select,textarea{font-family:inherit}
 /* SIDEBAR */
 .sidebar{
   width:230px;flex-shrink:0;height:100vh;
-  background:rgba(10,12,22,.82);backdrop-filter:blur(20px);
+  background:rgba(10,12,22,.86);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px);
   border-right:1px solid var(--line);
   display:flex;flex-direction:column;padding:20px 14px;
   transform:translateX(-30px);opacity:0;
@@ -123,7 +125,7 @@ input,select,textarea{font-family:inherit}
 .topbar{
   position:sticky;top:0;z-index:20;height:64px;
   display:flex;align-items:center;justify-content:space-between;padding:0 28px;
-  background:rgba(6,7,14,.6);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+  background:rgba(6,7,14,.72);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);border-bottom:1px solid var(--line);
 }
 .tb-title{font-family:var(--display);font-weight:700;font-size:1.15rem}
 .tb-stats{display:none;gap:14px;font-size:.78rem;color:var(--txt-2)}
@@ -295,7 +297,7 @@ input,select,textarea{font-family:inherit}
 .teia-hint{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(16,19,31,.9);border:1px solid var(--line-2);padding:8px 16px;border-radius:30px;font-size:.78rem;color:var(--txt-2);pointer-events:none}
 
 /* MOBILE NAV */
-.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(10,12,22,.96);backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:8px 6px calc(8px + env(safe-area-inset-bottom))}
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(10,12,22,.97);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);border-top:1px solid var(--line);padding:8px 6px calc(8px + env(safe-area-inset-bottom))}
 .mob-nav-inner{display:flex}
 .mob-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 2px;color:var(--txt-3);font-size:.6rem;font-weight:600}
 .mob-item .ic{font-size:1.2rem}
@@ -339,7 +341,7 @@ input,select,textarea{font-family:inherit}
 .btn-sync{border:1px solid rgba(var(--glow),.35);color:var(--cyan)}
 .btn-sync:hover{background:rgba(var(--glow),.08)}
 
-.panel{position:fixed;top:0;right:0;bottom:0;z-index:60;width:360px;max-width:90vw;background:rgba(10,12,22,.97);backdrop-filter:blur(20px);border-left:1px solid var(--line-2);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:24px}
+.panel{position:fixed;top:0;right:0;bottom:0;z-index:60;width:360px;max-width:90vw;background:rgba(10,12,22,.98);backdrop-filter:blur(13px);-webkit-backdrop-filter:blur(13px);border-left:1px solid var(--line-2);transform:translateX(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;padding:24px}
 .panel.open{transform:none}
 .panel-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px}
 .panel-title{font-family:var(--display);font-size:1.25rem;font-weight:700;line-height:1.2}
@@ -366,26 +368,15 @@ input,select,textarea{font-family:inherit}
 </head>
 <body>
 
-<!-- FUNDO -->
-<div class="aurora">
-  <div class="blob b1" data-depth="0.4"></div>
-  <div class="blob b2" data-depth="0.6"></div>
-  <div class="blob b3" data-depth="0.3"></div>
+<!-- FUNDO LEVE E DINÂMICO -->
+<div class="bg-wrap" id="bgWrap" aria-hidden="true">
+  <div class="aurora">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+  <div class="stars"></div>
 </div>
-<div class="stars"></div>
-<div class="ethereal" aria-hidden="true">
-  <div class="eth-inner"><div class="eth-shadow"></div></div>
-  <div class="eth-noise"></div>
-</div>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <filter id="ethFilter">
-    <feTurbulence result="undulation" numOctaves="2" baseFrequency="0.0008,0.003" seed="0" type="turbulence"/>
-    <feColorMatrix id="ethHue" in="undulation" type="hueRotate" values="180"/>
-    <feColorMatrix in="dist" result="circulation" type="matrix" values="4 0 0 0 1  4 0 0 0 1  4 0 0 0 1  1 0 0 0 0"/>
-    <feDisplacementMap in="SourceGraphic" in2="circulation" scale="80" result="dist"/>
-    <feDisplacementMap in="dist" in2="undulation" scale="80" result="output"/>
-  </filter>
-</defs></svg>
 <div class="grain"></div>
 
 <!-- ABERTURA -->
@@ -544,22 +535,22 @@ window.addEventListener('load',function(){
 window.addEventListener('wheel',function(e){if(!entrou&&e.deltaY>0)entrar()},{passive:true});
 window.addEventListener('touchmove',function(){if(!entrou)entrar()},{passive:true});
 
-/* ════ AURORA PARALLAX + DRIFT ════ */
-gsap.to('.b1',{x:'+=80',y:'+=60',duration:18,repeat:-1,yoyo:true,ease:'sine.inOut'});
-gsap.to('.b2',{x:'-=90',y:'+=70',duration:22,repeat:-1,yoyo:true,ease:'sine.inOut'});
-gsap.to('.b3',{x:'+=70',y:'-=50',duration:20,repeat:-1,yoyo:true,ease:'sine.inOut'});
-document.addEventListener('mousemove',function(e){
-  var cx=(e.clientX/window.innerWidth-.5),cy=(e.clientY/window.innerHeight-.5);
-  document.querySelectorAll('.blob').forEach(function(b){var d=parseFloat(b.dataset.depth)||.4;gsap.to(b,{xPercent:cx*18*d,yPercent:cy*18*d,duration:1.5,ease:'power2.out'})});
-});
-
-/* ════ ETHERAL SHADOWS — animação do hue (movimento orgânico) ════ */
+/* ════ PARALLAX LEVE DO FUNDO (rAF, só no desktop com mouse) ════ */
 (function(){
-  var hue=document.getElementById('ethHue');if(!hue)return;
-  var v=0,raf;
-  function loop(){v=(v+0.45)%360;hue.setAttribute('values',String(v));raf=requestAnimationFrame(loop)}
-  document.addEventListener('visibilitychange',function(){if(document.hidden){cancelAnimationFrame(raf)}else{raf=requestAnimationFrame(loop)}});
-  raf=requestAnimationFrame(loop);
+  var wrap=document.getElementById('bgWrap');if(!wrap)return;
+  var mq=window.matchMedia;
+  if(mq&&(mq('(prefers-reduced-motion:reduce)').matches||mq('(hover:none)').matches))return;
+  var tx=0,ty=0,cx=0,cy=0,running=false;
+  function frame(){
+    cx+=(tx-cx)*.06;cy+=(ty-cy)*.06;
+    wrap.style.transform='translate3d('+cx.toFixed(2)+'px,'+cy.toFixed(2)+'px,0)';
+    if(Math.abs(tx-cx)>.15||Math.abs(ty-cy)>.15){requestAnimationFrame(frame)}else{running=false}
+  }
+  window.addEventListener('mousemove',function(e){
+    tx=(e.clientX/window.innerWidth-.5)*26;
+    ty=(e.clientY/window.innerHeight-.5)*26;
+    if(!running){running=true;requestAnimationFrame(frame)}
+  },{passive:true});
 })();
 
 /* ════ NAVEGAÇÃO SEÇÕES ════ */
