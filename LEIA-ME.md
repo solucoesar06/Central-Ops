@@ -24,22 +24,27 @@ Sem o Supabase configurado, tudo é salvo na memória do navegador (localStorage
 
 - Use o botão **Backup** (canto inferior da barra lateral) para baixar um arquivo de segurança quando quiser.
 
-## Login + banco de dados na nuvem (Supabase)
+## Login + banco de dados na nuvem (Supabase) — JÁ ATIVO ✅
 
-Siga uma única vez para ativar contas e sincronização na nuvem. É grátis.
+A integração do **Supabase ↔ Vercel** já está conectada e configurada:
 
-1. **Crie o projeto:** acesse [supabase.com](https://supabase.com) → *New project*. Dê um nome e uma senha de banco (guarde-a) e aguarde provisionar (~2 min).
-2. **Crie a tabela:** no projeto, vá em **SQL Editor → New query**, abra o arquivo `supabase-setup.sql` deste repositório, **cole todo o conteúdo** e clique em **Run**.
-3. **Pegue as chaves:** vá em **Project Settings → API** e copie:
-   - **Project URL** (ex: `https://abcdefgh.supabase.co`)
-   - **anon public** (a chave longa)
-4. **Cole no app:** abra o `index.html`, no topo tem o bloco `window.CENTRALOPS_CONFIG`. Cole a URL em `SUPABASE_URL` e a chave em `SUPABASE_ANON_KEY`. Salve e publique (commit/push → a Vercel atualiza).
-5. **(Recomendado) Acesso instantâneo:** em **Authentication → Providers → Email**, desligue *"Confirm email"* se quiser entrar na hora ao criar a conta (sem precisar confirmar por e-mail).
-6. **(Opcional) Conta única:** se a plataforma é só sua, crie sua conta uma vez e depois desligue novos cadastros em **Authentication → Providers → Email → "Allow new users to sign up"**.
+- As credenciais (URL + chave anon) são lidas automaticamente das variáveis de ambiente da Vercel pela função `api/config.js` — **não há chave fixa no código**.
+- A tabela `central_ops_data` e as políticas **RLS** já foram criadas (cada conta só enxerga os próprios dados).
+- A tela de **login/cadastro** aparece sozinha ao abrir a plataforma publicada.
 
-Pronto: a tela de **login** aparece automaticamente, e cada conta vê só os próprios dados (protegido por RLS — *Row Level Security*).
+### Como funciona por dentro
+- `api/config.js` → entrega URL + anon key (públicas) a partir das env vars `SUPABASE_URL` / `SUPABASE_ANON_KEY`.
+- `index.html` → no boot, busca `/api/config`; se vier configurado, ativa o modo nuvem e exige login. Sem isso (ex: abrindo o arquivo localmente), roda em modo local com localStorage.
+- `supabase-setup.sql` → o SQL da tabela + RLS, caso precise recriar manualmente no **SQL Editor** do Supabase.
 
-> A chave **anon public** pode ficar visível no código — ela é feita para isso. Quem protege os dados é o RLS, que garante que cada usuário só acessa a própria linha.
+### Ajustes recomendados no painel do Supabase
+1. **Acesso instantâneo:** **Authentication → Providers → Email** → desligue *"Confirm email"* para entrar na hora ao criar a conta (sem confirmar por e-mail).
+2. **(Opcional) Travar cadastros:** se a plataforma é só sua, crie sua conta e depois desligue *"Allow new users to sign up"* no mesmo lugar.
+
+> A chave **anon public** é feita para ficar exposta ao navegador. Quem protege os dados é o **RLS**, que garante que cada usuário só acessa a própria linha.
+
+### Trocar de projeto Supabase no futuro
+Se um dia quiser apontar para outro projeto, basta atualizar as variáveis de ambiente na Vercel (ou preencher o bloco `window.CENTRALOPS_CONFIG` no topo do `index.html`) e rodar o `supabase-setup.sql` no novo projeto.
 
 ## Campanhas com métricas automáticas
 
