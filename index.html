@@ -369,6 +369,24 @@ input,select,textarea{font-family:inherit}
 .cc-div{width:1px;height:22px;background:var(--line-2);margin:0 3px}
 .teia-hint{position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(16,19,31,.9);border:1px solid var(--line-2);padding:8px 16px;border-radius:30px;font-size:.78rem;color:var(--txt-2);pointer-events:none}
 
+/* ════ CENTRAL — barra de criação rápida ════ */
+.central-bar{position:absolute;bottom:72px;left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:6px;background:rgba(16,19,31,.92);backdrop-filter:blur(14px);border:1px solid var(--line-2);border-radius:13px;padding:7px}
+.cb-btn{display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:9px;font-size:.8rem;font-weight:600;color:var(--txt-2);border:1px solid transparent;transition:all .15s;cursor:pointer;background:none;white-space:nowrap}
+.cb-btn:hover{background:var(--surf-3);border-color:var(--line-2);color:var(--txt)}
+.cb-btn.negocio:hover{color:var(--cyan)}
+.cb-btn.produto:hover{color:var(--violet)}
+.cb-btn.campanha:hover{color:var(--green)}
+.cb-btn.tarefa:hover{color:var(--amber)}
+/* menu de contexto (double-click no canvas) */
+.ctx-menu{position:fixed;z-index:200;background:rgba(14,10,22,.97);backdrop-filter:blur(18px);border:1px solid var(--line-2);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:3px;min-width:168px;box-shadow:0 10px 40px rgba(0,0,0,.7);animation:ctxIn .12s ease}
+@keyframes ctxIn{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+.ctx-item{display:flex;align-items:center;gap:9px;padding:9px 12px;border-radius:8px;font-size:.85rem;font-weight:500;color:var(--txt-2);cursor:pointer;transition:all .12s;border:none;background:none;width:100%;text-align:left}
+.ctx-item:hover{background:var(--surf-3);color:var(--txt)}
+.ctx-item.negocio:hover{color:var(--cyan)}
+.ctx-item.produto:hover{color:var(--violet)}
+.ctx-item.campanha:hover{color:var(--green)}
+.ctx-item.tarefa:hover{color:var(--amber)}
+
 /* MOBILE NAV */
 .mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(10,12,22,.97);backdrop-filter:blur(11px);-webkit-backdrop-filter:blur(11px);border-top:1px solid var(--line);padding:8px 6px calc(8px + env(safe-area-inset-bottom))}
 .mob-nav-inner{display:flex}
@@ -515,7 +533,7 @@ input,select,textarea{font-family:inherit}
       <button class="sb-link" data-sec="produtos" onclick="irSec('produtos',this)"><span class="ic">◆</span> Produtos <span class="count" id="cnt-prod">0</span></button>
       <button class="sb-link" data-sec="campanhas" onclick="irSec('campanhas',this)"><span class="ic">⚡</span> Campanhas <span class="count" id="cnt-camp">0</span></button>
       <button class="sb-link" data-sec="tarefas" onclick="irSec('tarefas',this)"><span class="ic">✓</span> Tarefas <span class="count" id="cnt-task">0</span></button>
-      <button class="sb-link" data-sec="teia" onclick="irSec('teia',this)"><span class="ic">⬡</span> Teia</button>
+      <button class="sb-link" data-sec="teia" onclick="irSec('teia',this)"><span class="ic">⬡</span> Central</button>
     </nav>
     <div class="sb-foot">
       <button class="sb-backup" onclick="exportar()"><span>⬇</span> Fazer backup</button>
@@ -588,7 +606,13 @@ input,select,textarea{font-family:inherit}
       <div class="teia-stage" id="teiaStage">
         <div class="teia-canvas" id="teiaCanvas"><svg class="edges" id="edges"></svg></div>
       </div>
-      <div class="teia-hint" id="teiaHint">⬡ Visualização da sua operação · arraste, dê zoom, clique nos nós</div>
+      <div class="teia-hint" id="teiaHint">⬡ Clique duplo no canvas para adicionar · arraste os blocos · scroll para zoom</div>
+      <div class="central-bar">
+        <button class="cb-btn negocio" onclick="addFromCentral('negocio')">▣ Negócio</button>
+        <button class="cb-btn produto" onclick="addFromCentral('produto')">◆ Produto</button>
+        <button class="cb-btn campanha" onclick="addFromCentral('campanha')">⚡ Campanha</button>
+        <button class="cb-btn tarefa" onclick="addFromCentral('tarefa')">✓ Tarefa</button>
+      </div>
       <div class="teia-ctrl">
         <button class="cc-btn" onclick="zoomBy(-0.15)">−</button>
         <span class="cc-zoom" id="zoomLabel">100%</span>
@@ -609,7 +633,7 @@ input,select,textarea{font-family:inherit}
     <button class="mob-item" data-sec="negocios" onclick="irSec('negocios',this)"><span class="ic">▣</span>Negócios</button>
     <button class="mob-item" data-sec="produtos" onclick="irSec('produtos',this)"><span class="ic">◆</span>Produtos</button>
     <button class="mob-item" data-sec="campanhas" onclick="irSec('campanhas',this)"><span class="ic">⚡</span>Camp.</button>
-    <button class="mob-item" data-sec="teia" onclick="irSec('teia',this)"><span class="ic">⬡</span>Teia</button>
+    <button class="mob-item" data-sec="teia" onclick="irSec('teia',this)"><span class="ic">⬡</span>Central</button>
   </div>
 </nav>
 
@@ -636,8 +660,8 @@ function iniciarLogin(){
   supa.auth.onAuthStateChange(function(evt,session){if(session&&session.user){if(!USER)onLogin(session)}else if(evt==='SIGNED_OUT'){USER=null}});
 }
 
-function carregar(){try{var d=JSON.parse(localStorage.getItem(LS_DB));if(d&&d.negocios)return normalizeDB(d)}catch(e){}return {negocios:[],produtos:[],campanhas:[],tarefas:[]}}
-function normalizeDB(d){d=d||{};return {negocios:d.negocios||[],produtos:d.produtos||[],campanhas:d.campanhas||[],tarefas:d.tarefas||[]}}
+function carregar(){try{var d=JSON.parse(localStorage.getItem(LS_DB));if(d&&d.negocios)return normalizeDB(d)}catch(e){}return {negocios:[],produtos:[],campanhas:[],tarefas:[],teiaLayout:{},teiaView:null}}
+function normalizeDB(d){d=d||{};return {negocios:d.negocios||[],produtos:d.produtos||[],campanhas:d.campanhas||[],tarefas:d.tarefas||[],teiaLayout:d.teiaLayout||{},teiaView:d.teiaView||null}}
 var DB=carregar();
 function salvarLocal(){try{localStorage.setItem(LS_DB,JSON.stringify(DB))}catch(e){}}
 function salvar(){salvarLocal();if(CLOUD&&USER){clearTimeout(pushTimer);pushTimer=setTimeout(pushCloud,800)}}
@@ -645,7 +669,7 @@ function pushCloud(){if(!CLOUD||!USER)return;supa.from('central_ops_data').upser
 function syncOnLogin(cb){
   if(!CLOUD||!USER){cb&&cb();return}
   supa.from('central_ops_data').select('data').eq('user_id',USER.id).maybeSingle().then(function(r){
-    if(r&&!r.error&&r.data&&r.data.data&&r.data.data.negocios){DB=normalizeDB(r.data.data);salvarLocal()}
+    if(r&&!r.error&&r.data&&r.data.data&&r.data.data.negocios){DB=normalizeDB(r.data.data);POS=DB.teiaLayout;salvarLocal()}
     else{pushCloud()} /* sem dados na nuvem ainda: envia o que houver local (migração/seed) */
     cb&&cb();
   },function(){cb&&cb()});
@@ -709,8 +733,8 @@ function revealApp(){
 }
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-var POS=(function(){try{return JSON.parse(localStorage.getItem('centralops_pos'))||{}}catch(e){return {}}})();
-function salvarPos(){try{localStorage.setItem('centralops_pos',JSON.stringify(POS))}catch(e){}}
+var POS=DB.teiaLayout;
+function salvarPos(){salvar();}
 
 if(DB.negocios.length===0&&DB.produtos.length===0){
   var n1=uid(),n2=uid(),p1=uid();
@@ -765,7 +789,7 @@ window.addEventListener('touchmove',function(){if(!entrou)entrar()},{passive:tru
 
 /* ════ NAVEGAÇÃO SEÇÕES ════ */
 var secAtual='dash';
-var titulos={dash:'Dashboard',negocios:'Negócios',produtos:'Produtos',campanhas:'Campanhas',tarefas:'Tarefas',teia:'Teia'};
+var titulos={dash:'Dashboard',negocios:'Negócios',produtos:'Produtos',campanhas:'Campanhas',tarefas:'Tarefas',teia:'Central'};
 function irSec(s,btn){
   document.querySelectorAll('.section').forEach(function(el){el.classList.remove('active')});
   document.getElementById('sec-'+s).classList.add('active');
@@ -777,7 +801,7 @@ function irSec(s,btn){
   else if(s==='produtos')renderProdutos();
   else if(s==='campanhas'){renderCampanhas();autoSyncCampanhas()}
   else if(s==='tarefas')renderTarefas();
-  else if(s==='teia'){buildTeia();setTimeout(centralizar,30)}
+  else if(s==='teia'){buildTeia();if(!DB.teiaView||!DB.teiaView.scale)setTimeout(centralizar,30)}
   document.getElementById('content').scrollTop=0;
 }
 window.irSec=irSec;
@@ -1100,12 +1124,18 @@ window.toggleTarefa=function(id){var t=DB.tarefas.find(function(x){return x.id==
 /* ════ TEIA ════ */
 var view={x:0,y:0,scale:1};
 var teiaStage=document.getElementById('teiaStage'),teiaCanvas=document.getElementById('teiaCanvas'),edges=document.getElementById('edges');
-var nodeEls={},edgeList=[];
-function applyView(){teiaCanvas.style.transform='translate('+view.x+'px,'+view.y+'px) scale('+view.scale+')';document.getElementById('zoomLabel').textContent=Math.round(view.scale*100)+'%'}
+var nodeEls={},edgeList=[],viewTimer=null;
+function applyView(){
+  teiaCanvas.style.transform='translate('+view.x+'px,'+view.y+'px) scale('+view.scale+')';
+  document.getElementById('zoomLabel').textContent=Math.round(view.scale*100)+'%';
+  clearTimeout(viewTimer);
+  viewTimer=setTimeout(function(){DB.teiaView={x:view.x,y:view.y,scale:view.scale};salvar();},1200);
+}
 function buildTeia(){
   Object.values(nodeEls).forEach(function(el){el.remove()});nodeEls={};edges.innerHTML='';edgeList=[];
   var cx=1400,cy=900;
-  criarNo('root','central','⬡','CentralOps','operação',cx,cy);
+  if(DB.teiaView&&DB.teiaView.scale){view.x=DB.teiaView.x;view.y=DB.teiaView.y;view.scale=DB.teiaView.scale;applyView();}
+  criarNo('root','central','⬡','Central','operação',cx,cy);
   var nNeg=DB.negocios.length||1;
   DB.negocios.forEach(function(neg,i){
     var ang=(Math.PI*2/nNeg)*i-Math.PI/2;
@@ -1163,7 +1193,41 @@ function attachDrag(el,id){
 })();
 window.zoomBy=function(d){var ns=Math.min(2,Math.max(0.4,view.scale+d));var r=teiaStage.getBoundingClientRect(),mx=r.width/2,my=r.height/2;view.x=mx-(mx-view.x)*(ns/view.scale);view.y=my-(my-view.y)*(ns/view.scale);view.scale=ns;applyView()};
 window.centralizar=function(){var r=teiaStage.getBoundingClientRect();view.scale=1;view.x=r.width/2-1480;view.y=r.height/2-960;applyView()};
-window.reorganizar=function(){if(!confirm('Reorganizar a teia?'))return;POS={};salvarPos();buildTeia();centralizar();toast('Teia reorganizada')};
+window.reorganizar=function(){if(!confirm('Reorganizar a teia?'))return;DB.teiaLayout={};DB.teiaView=null;POS=DB.teiaLayout;salvarPos();buildTeia();centralizar();toast('Central reorganizada')};
+
+/* ════ CRIAÇÃO DIRETA NA CENTRAL ════ */
+var PENDING_POS=null;
+var _ctxMenu=null;
+function _closeCtx(){if(_ctxMenu){_ctxMenu.remove();_ctxMenu=null;}}
+function _openAddModal(tipo){
+  if(tipo==='negocio')window.abrirModalNegocio();
+  else if(tipo==='produto')window.abrirModalProduto();
+  else if(tipo==='campanha')window.abrirModalCampanha();
+  else if(tipo==='tarefa')window.abrirModalTarefa();
+}
+window.addFromCentral=function(tipo){
+  var r=teiaStage.getBoundingClientRect();
+  var cx=(r.width/2-view.x)/view.scale,cy=(r.height/2-view.y)/view.scale;
+  PENDING_POS={x:cx+Math.random()*120-60,y:cy+Math.random()*80-40};
+  _openAddModal(tipo);
+};
+teiaStage.addEventListener('dblclick',function(e){
+  if(e.target.closest('.tnode'))return;
+  _closeCtx();
+  var r=teiaStage.getBoundingClientRect();
+  var wx=(e.clientX-r.left-view.x)/view.scale,wy=(e.clientY-r.top-view.y)/view.scale;
+  _ctxMenu=document.createElement('div');_ctxMenu.className='ctx-menu';
+  var mx=Math.min(e.clientX,window.innerWidth-180),my=Math.min(e.clientY,window.innerHeight-200);
+  _ctxMenu.style.left=mx+'px';_ctxMenu.style.top=my+'px';
+  [['negocio','▣','Negócio'],['produto','◆','Produto'],['campanha','⚡','Campanha'],['tarefa','✓','Tarefa']].forEach(function(t){
+    var item=document.createElement('button');item.className='ctx-item '+t[0];
+    item.innerHTML='<span>'+t[1]+'</span>'+t[2];
+    item.onclick=function(){_closeCtx();PENDING_POS={x:wx,y:wy};_openAddModal(t[0]);};
+    _ctxMenu.appendChild(item);
+  });
+  document.body.appendChild(_ctxMenu);
+  setTimeout(function(){document.addEventListener('click',_closeCtx,{once:true});},0);
+});
 function animarTeia(){var ns=Object.values(nodeEls);gsap.set(ns,{scale:0,opacity:0});gsap.set(edges.querySelectorAll('path'),{opacity:0});gsap.to(ns,{scale:1,opacity:1,duration:.5,stagger:.04,ease:'back.out(1.5)'});gsap.to(edges.querySelectorAll('.edge'),{opacity:.4,duration:.6,delay:.3});gsap.to(edges.querySelectorAll('.edge-flow'),{opacity:.85,duration:.6,delay:.4})}
 
 /* PAINEL */
@@ -1181,7 +1245,7 @@ window.fecharPainel=function(){panel.classList.remove('open');Object.values(node
 
 /* ════ MODAIS CRUD ════ */
 var ov=document.getElementById('overlay');
-function fecharModal(){ov.classList.remove('open');ov.innerHTML=''}
+function fecharModal(){ov.classList.remove('open');ov.innerHTML='';PENDING_POS=null;}
 window.fecharModal=fecharModal;
 ov.addEventListener('click',function(e){if(e.target===ov)fecharModal()});
 function val(id){var el=document.getElementById(id);return el?el.value.trim():''}
@@ -1190,18 +1254,18 @@ function selNeg(sel){return '<select id="f-negocio">'+(DB.negocios.length?'':'<o
 function selProd(sel){return '<select id="f-produto">'+(DB.produtos.length?'':'<option value="">— crie um produto antes —</option>')+DB.produtos.map(function(p){return '<option value="'+p.id+'"'+(p.id===sel?' selected':'')+'>'+esc(p.nome)+'</option>'}).join('')+'</select>'}
 
 window.abrirModalNegocio=function(id){var n=id?DB.negocios.find(function(x){return x.id===id}):{};ov.innerHTML='<div class="modal"><h3>'+(id?'Editar':'Novo')+' negócio <span class="x" onclick="fecharModal()">✕</span></h3><div class="field"><label>Nome</label><input id="f-nome" value="'+esc(n.nome||'')+'" placeholder="Ex: Educando"></div><div class="field"><label>Nicho</label><input id="f-nicho" value="'+esc(n.nicho||'')+'" placeholder="Ex: Material pedagógico"></div><div class="field"><label>Emoji</label><input id="f-emoji" value="'+esc(n.emoji||'')+'" placeholder="📚" maxlength="2"></div><div class="field"><label>Notas</label><textarea id="f-obs">'+esc(n.obs||'')+'</textarea></div><div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="salvarNegocio(\''+(id||'')+'\')">Salvar</button></div></div>';ov.classList.add('open')};
-window.salvarNegocio=function(id){var nome=val('f-nome');if(!nome){toast('Dê um nome');return}var obj={nome:nome,nicho:val('f-nicho'),emoji:val('f-emoji'),obs:val('f-obs')};if(id)Object.assign(DB.negocios.find(function(x){return x.id===id}),obj);else{obj.id=uid();DB.negocios.push(obj)}salvar();fecharModal();afterChange('negocios');toast('Negócio salvo ✓')};
+window.salvarNegocio=function(id){var nome=val('f-nome');if(!nome){toast('Dê um nome');return}var obj={nome:nome,nicho:val('f-nicho'),emoji:val('f-emoji'),obs:val('f-obs')};if(id)Object.assign(DB.negocios.find(function(x){return x.id===id}),obj);else{obj.id=uid();DB.negocios.push(obj);if(PENDING_POS){POS['neg_'+obj.id]=PENDING_POS;PENDING_POS=null;}}salvar();fecharModal();afterChange('negocios');toast('Negócio salvo ✓')};
 window.delNegocio=function(id){if(!confirm('Excluir negócio?'))return;DB.negocios=DB.negocios.filter(function(x){return x.id!==id});salvar();fecharPainel();afterChange('negocios');toast('Excluído')};
 
 window.abrirModalProduto=function(id){var p=id?DB.produtos.find(function(x){return x.id===id}):{assets:[]};var ah=(p.assets||[]).map(function(a){return rowAsset(a)}).join('');ov.innerHTML='<div class="modal"><h3>'+(id?'Editar':'Novo')+' produto <span class="x" onclick="fecharModal()">✕</span></h3><div class="field"><label>Nome</label><input id="f-nome" value="'+esc(p.nome||'')+'" placeholder="Ex: Kit Eletricista"></div><div class="field"><label>Negócio</label>'+selNeg(p.negocioId)+'</div><div class="field"><label>Status</label><select id="f-status">'+optStatus('producao','Em produção',p.status)+optStatus('ativo','Ativo',p.status)+optStatus('pausado','Pausado',p.status)+'</select></div><div class="field"><label>Ticket (R$)</label><input id="f-ticket" value="'+esc(p.ticket||'')+'" placeholder="27"></div><div class="field"><label>Plataforma</label><input id="f-plataforma" value="'+esc(p.plataforma||'')+'" placeholder="Cakto"></div><div class="field"><label>Links / Ativos</label><div id="assets-box">'+ah+'</div><button class="add-asset" onclick="addAssetRow()">+ adicionar link</button></div><div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button><button class="btn btn-primary" onclick="salvarProduto(\''+(id||'')+'\')">Salvar</button></div></div>';ov.classList.add('open')};
 function rowAsset(a){a=a||{};var thumb=a.dataUrl?'<div class="asset-thumb">'+((a.mime||'').indexOf('video/')===0?'<video src="'+esc(a.dataUrl)+'" controls playsinline></video>':'<img src="'+esc(a.dataUrl)+'" alt="'+esc(a.nome||'Criativo')+'">')+'</div>':'';return '<div class="asset-row"><select class="a-tipo">'+['Landing Page','Checkout','Criativo','PDF','Área de membros','Planilha','Outro'].map(function(t){return '<option'+(a.tipo===t?' selected':'')+'>'+t+'</option>'}).join('')+'</select><input class="a-nome" placeholder="Nome" value="'+esc(a.nome||'')+'"><input class="a-url" placeholder="https://" value="'+esc(a.url||'')+'"><button class="rm" onclick="this.parentNode.remove()">✕</button><div class="asset-file"><input type="file" accept="image/*,video/*" onchange="processAssetFile(this)"><span class="file-name">'+esc(a.fileName||'subir criativo visual')+'</span></div><input type="hidden" class="a-data" value="'+esc(a.dataUrl||'')+'"><input type="hidden" class="a-mime" value="'+esc(a.mime||'')+'"><input type="hidden" class="a-file" value="'+esc(a.fileName||'')+'">'+thumb+'</div>'}
 window.addAssetRow=function(){var box=document.getElementById('assets-box');var d=document.createElement('div');d.innerHTML=rowAsset({});box.appendChild(d.firstChild)};
 window.processAssetFile=function(input){var file=input.files&&input.files[0],row=input.closest('.asset-row');if(!file||!row)return;if(file.size>100*1024*1024){toast('Arquivo muito grande. Use até 100 MB');input.value='';return}var reader=new FileReader();reader.onload=function(){row.querySelector('.a-data').value=reader.result;row.querySelector('.a-mime').value=file.type;row.querySelector('.a-file').value=file.name;row.querySelector('.file-name').textContent=file.name;var old=row.querySelector('.asset-thumb');if(old)old.remove();var box=document.createElement('div');box.className='asset-thumb';box.innerHTML=file.type.indexOf('video/')===0?'<video src="'+reader.result+'" controls playsinline></video>':'<img src="'+reader.result+'" alt="'+esc(file.name)+'">';row.appendChild(box);toast('Criativo carregado ✓')};reader.readAsDataURL(file)};
-window.salvarProduto=function(id){var nome=val('f-nome');if(!nome){toast('Dê um nome');return}var assets=[];document.querySelectorAll('#assets-box .asset-row').forEach(function(r){var t=r.querySelector('.a-tipo').value,n=r.querySelector('.a-nome').value,u=r.querySelector('.a-url').value,d=r.querySelector('.a-data').value,m=r.querySelector('.a-mime').value,f=r.querySelector('.a-file').value;if(n||u||d)assets.push({tipo:t,nome:n||f||t,url:u,dataUrl:d,mime:m,fileName:f})});var obj={nome:nome,negocioId:val('f-negocio'),status:val('f-status'),ticket:val('f-ticket'),plataforma:val('f-plataforma'),assets:assets};if(id)Object.assign(DB.produtos.find(function(x){return x.id===id}),obj);else{obj.id=uid();DB.produtos.push(obj)}salvar();fecharModal();afterChange('produtos');toast('Produto salvo ✓')};
+window.salvarProduto=function(id){var nome=val('f-nome');if(!nome){toast('Dê um nome');return}var assets=[];document.querySelectorAll('#assets-box .asset-row').forEach(function(r){var t=r.querySelector('.a-tipo').value,n=r.querySelector('.a-nome').value,u=r.querySelector('.a-url').value,d=r.querySelector('.a-data').value,m=r.querySelector('.a-mime').value,f=r.querySelector('.a-file').value;if(n||u||d)assets.push({tipo:t,nome:n||f||t,url:u,dataUrl:d,mime:m,fileName:f})});var obj={nome:nome,negocioId:val('f-negocio'),status:val('f-status'),ticket:val('f-ticket'),plataforma:val('f-plataforma'),assets:assets};if(id)Object.assign(DB.produtos.find(function(x){return x.id===id}),obj);else{obj.id=uid();DB.produtos.push(obj);if(PENDING_POS){POS['prod_'+obj.id]=PENDING_POS;PENDING_POS=null;}}salvar();fecharModal();afterChange('produtos');toast('Produto salvo ✓')};
 window.delProduto=function(id){if(!confirm('Excluir produto?'))return;DB.produtos=DB.produtos.filter(function(x){return x.id!==id});salvar();fecharPainel();afterChange('produtos');toast('Excluído')};
 
 window.abrirModalCampanha=function(id){var c=id?DB.campanhas.find(function(x){return x.id===id}):{autoSync:true};var m=c.metricas||{};ov.innerHTML='<div class="modal"><h3>'+(id?'Editar':'Nova')+' campanha <span class="x" onclick="fecharModal()">✕</span></h3><div class="field"><label>Nome</label><input id="f-nome" value="'+esc(c.nome||'')+'" placeholder="Ex: Educando - Conversão"></div><div class="field"><label>Produto</label>'+selProd(c.produtoId)+'</div><div class="field"><label>Status</label><select id="f-status">'+optStatus('teste','Em teste',c.status)+optStatus('rodando','Rodando',c.status)+optStatus('pausado','Pausada',c.status)+'</select></div><div class="field"><label>Plataforma</label><input id="f-plataforma" value="'+esc(c.plataforma||'')+'" placeholder="Meta Ads"></div><div class="field"><label>Orçamento diário (R$)</label><input id="f-orcamento" value="'+esc(c.orcamento||'')+'" placeholder="50"></div><div class="field"><label>CPA atual (R$)</label><input id="f-cpa" value="'+esc(c.cpa||'')+'" placeholder="15"></div><div class="field"><label>Criativo ativo</label><input id="f-criativo" value="'+esc(c.criativo||'')+'" placeholder="Ex: Vídeo gancho v2"></div><div class="sync-box"><div class="sync-title">Integração automática com a Meta</div><div class="sync-help">Cole o <b>Campaign ID</b> + <b>Token</b> da Meta. Os dados são buscados com segurança pelo servidor (sem precisar abrir o Gerenciador). O token fica salvo só neste navegador.</div><details class="howto"><summary>Como conseguir o Campaign ID e o Token da Meta?</summary><div class="howto-body"><ol><li><b>Campaign ID:</b> abra o <a href="https://adsmanager.facebook.com/adsmanager/manage/campaigns" target="_blank" rel="noopener">Gerenciador de Anúncios</a>, vá em <b>Campanhas</b> e copie o número da coluna <code>Identificação</code> (ID) da campanha. Se a coluna não aparecer, ative em <i>Colunas → Personalizar</i>.</li><li>Abra o <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Explorador da Graph API</a>. Se ainda não tiver um app, crie um gratuito em <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a> (tipo <i>Empresa</i>).</li><li>No Explorador, selecione seu app no topo, clique em <b>Add a Permission</b> e marque <code>ads_read</code>.</li><li>Clique em <b>Generate Access Token</b> e autorize o acesso à sua conta de anúncios. Copie o token que aparecer.</li><li>Cole o <b>Campaign ID</b> e o <b>Token</b> nos campos abaixo e salve. Pronto — as métricas passam a ser puxadas automaticamente. 🎉</li></ol><div class="howto-tip">⏱ <b>Token sem validade:</b> o token do Explorador expira em ~1 a 2 horas. Para um token que <b>não expira</b>, crie um <a href="https://business.facebook.com/settings/system-users" target="_blank" rel="noopener">Usuário do Sistema</a> em <i>Configurações do Negócio</i>, atribua sua conta de anúncios e gere um token com a permissão <code>ads_read</code>.</div></div></details><div class="sync-grid"><div class="field"><label>Campaign ID da Meta</label><input id="f-meta-campaign" value="'+esc(c.metaCampaignId||'')+'" placeholder="120000000000000"></div><div class="field"><label>Token de acesso Meta</label><input id="f-meta-token" value="'+esc(c.metaAccessToken||'')+'" placeholder="EAAB..."></div><div class="field"><label>URL de métricas externa (opcional)</label><input id="f-meta-url" value="'+esc(c.metaApiUrl||'')+'" placeholder="https://seu-backend.com/meta/campanha/123"></div></div><div class="field"><label><input id="f-auto-sync" type="checkbox" '+(c.autoSync?'checked':'')+' style="width:auto;margin-right:7px"> atualizar automaticamente ao abrir</label></div>'+(m.atualizadoEm?'<div class="sync-status ok">Última leitura: '+esc(dataCurta(m.atualizadoEm))+'</div>':'')+'</div><div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>'+(id?'<button class="btn btn-sync" onclick="salvarCampanha(\''+id+'\',true)">Buscar dados</button>':'')+'<button class="btn btn-primary" onclick="salvarCampanha(\''+(id||'')+'\')">Salvar</button></div></div>';ov.classList.add('open')};
-window.salvarCampanha=function(id,syncDepois){var nome=val('f-nome');if(!nome){toast('Dê um nome');return}var obj={nome:nome,produtoId:val('f-produto'),status:val('f-status'),plataforma:val('f-plataforma'),orcamento:val('f-orcamento'),cpa:val('f-cpa'),criativo:val('f-criativo'),metaCampaignId:val('f-meta-campaign'),metaAccessToken:val('f-meta-token'),metaApiUrl:val('f-meta-url'),autoSync:!!document.getElementById('f-auto-sync')&&document.getElementById('f-auto-sync').checked};var camp;if(id){camp=DB.campanhas.find(function(x){return x.id===id});Object.assign(camp,obj)}else{obj.id=uid();DB.campanhas.push(obj);camp=obj}salvar();if(syncDepois){atualizarCampanhaMeta(camp.id,true);return}fecharModal();afterChange('campanhas');toast('Campanha salva ✓')};
+window.salvarCampanha=function(id,syncDepois){var nome=val('f-nome');if(!nome){toast('Dê um nome');return}var obj={nome:nome,produtoId:val('f-produto'),status:val('f-status'),plataforma:val('f-plataforma'),orcamento:val('f-orcamento'),cpa:val('f-cpa'),criativo:val('f-criativo'),metaCampaignId:val('f-meta-campaign'),metaAccessToken:val('f-meta-token'),metaApiUrl:val('f-meta-url'),autoSync:!!document.getElementById('f-auto-sync')&&document.getElementById('f-auto-sync').checked};var camp;if(id){camp=DB.campanhas.find(function(x){return x.id===id});Object.assign(camp,obj)}else{obj.id=uid();DB.campanhas.push(obj);camp=obj;if(PENDING_POS){POS['camp_'+obj.id]=PENDING_POS;PENDING_POS=null;}}salvar();if(syncDepois){atualizarCampanhaMeta(camp.id,true);return}fecharModal();afterChange('campanhas');toast('Campanha salva ✓')};
 window.atualizarCampanhaMeta=function(id,manterModal){var c=DB.campanhas.find(function(x){return x.id===id});if(!c)return;if(!c.metaApiUrl&&(!c.metaCampaignId||!c.metaAccessToken)){toast('Informe Campaign ID + token ou URL');return}toast('Buscando métricas...');buscarMetricasCampanha(c).then(function(dados){aplicarMetricasMeta(c,dados);salvar();if(manterModal)abrirModalCampanha(id);else afterChange('campanhas');toast('Métricas atualizadas ✓')}).catch(function(err){toast((err&&err.message)||'Erro ao buscar métricas')})};
 function buscarMetricasCampanha(c){
   var per=CAMP_PERIODO||'last_30d';
