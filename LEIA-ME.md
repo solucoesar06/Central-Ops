@@ -20,10 +20,26 @@ Funciona também só abrindo o `index.html` direto no navegador.
 
 ## Onde os dados ficam
 
-Tudo é salvo na memória do navegador (localStorage). Os dados ficam no aparelho/navegador que você usa. Por isso:
-- Use sempre o mesmo navegador para ter seus dados
-- Use o botão **Backup** (canto superior) regularmente para baixar um arquivo de segurança
-- Esse backup é a base para quando migrarmos para banco de dados online (v2)
+Sem o Supabase configurado, tudo é salvo na memória do navegador (localStorage) — os dados ficam só no aparelho/navegador que você usa. Com o **Supabase configurado (abaixo)**, passa a ter **login por conta** e os dados ficam **na nuvem**, sincronizando entre celular e computador.
+
+- Use o botão **Backup** (canto inferior da barra lateral) para baixar um arquivo de segurança quando quiser.
+
+## Login + banco de dados na nuvem (Supabase)
+
+Siga uma única vez para ativar contas e sincronização na nuvem. É grátis.
+
+1. **Crie o projeto:** acesse [supabase.com](https://supabase.com) → *New project*. Dê um nome e uma senha de banco (guarde-a) e aguarde provisionar (~2 min).
+2. **Crie a tabela:** no projeto, vá em **SQL Editor → New query**, abra o arquivo `supabase-setup.sql` deste repositório, **cole todo o conteúdo** e clique em **Run**.
+3. **Pegue as chaves:** vá em **Project Settings → API** e copie:
+   - **Project URL** (ex: `https://abcdefgh.supabase.co`)
+   - **anon public** (a chave longa)
+4. **Cole no app:** abra o `index.html`, no topo tem o bloco `window.CENTRALOPS_CONFIG`. Cole a URL em `SUPABASE_URL` e a chave em `SUPABASE_ANON_KEY`. Salve e publique (commit/push → a Vercel atualiza).
+5. **(Recomendado) Acesso instantâneo:** em **Authentication → Providers → Email**, desligue *"Confirm email"* se quiser entrar na hora ao criar a conta (sem precisar confirmar por e-mail).
+6. **(Opcional) Conta única:** se a plataforma é só sua, crie sua conta uma vez e depois desligue novos cadastros em **Authentication → Providers → Email → "Allow new users to sign up"**.
+
+Pronto: a tela de **login** aparece automaticamente, e cada conta vê só os próprios dados (protegido por RLS — *Row Level Security*).
+
+> A chave **anon public** pode ficar visível no código — ela é feita para isso. Quem protege os dados é o RLS, que garante que cada usuário só acessa a própria linha.
 
 ## Campanhas com métricas automáticas
 
@@ -70,9 +86,9 @@ Na primeira vez, dois negócios de exemplo (Educando e Pro Service) já aparecem
 - Backup manual
 
 ### v2 — quando validar e for vender
-- Banco de dados online (sincroniza entre celular e computador)
-- Login por usuário
-- Integração com Meta Ads (puxar métricas automaticamente)
+- ✅ Login por usuário (Supabase Auth)
+- ✅ Banco de dados online (sincroniza entre celular e computador)
+- ✅ Integração com Meta Ads (puxar métricas automaticamente)
 - Integração com Cakto/Hotmart (puxar vendas)
 - Relatórios e gráficos de faturamento
 - Modelo recorrente (assinatura mensal)

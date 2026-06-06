@@ -10,6 +10,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.6/Sortable.min.js"></script>
+<!-- Supabase: login + banco de dados na nuvem -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  CONFIGURE SEU SUPABASE AQUI                                        ║
+   ║  Pegue em: Supabase → seu projeto → Project Settings → API         ║
+   ║  Enquanto estiver vazio, a plataforma roda sem login (dados locais).║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+window.CENTRALOPS_CONFIG = {
+  SUPABASE_URL:      '',   // ex: https://abcdefgh.supabase.co
+  SUPABASE_ANON_KEY: ''    // a chave "anon public" (pode ficar pública, é protegida por RLS)
+};
+</script>
 <style>
 :root{
   --bg:#0A0710;--bg-2:#0F0A18;--surf:#150F22;--surf-2:#1C1530;--surf-3:#271D3F;
@@ -413,6 +426,31 @@ input,select,textarea{font-family:inherit}
 .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surf-3);border:1px solid var(--line-2);color:var(--txt);font-weight:600;font-size:.85rem;padding:11px 22px;border-radius:30px;opacity:0;pointer-events:none;transition:all .3s;z-index:300}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ════ TELA DE LOGIN (Supabase) ════ */
+.auth{position:fixed;inset:0;z-index:55;display:none;align-items:center;justify-content:center;padding:22px;animation:secIn .4s ease}
+.auth.show{display:flex}
+.auth-card{width:100%;max-width:400px;background:rgba(16,12,28,.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--line-2);border-radius:22px;padding:34px 30px;box-shadow:0 30px 90px rgba(0,0,0,.55)}
+.auth-brand{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:22px}
+.auth-brand .m{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,var(--cyan),var(--violet));display:flex;align-items:center;justify-content:center;font-size:1.35rem;box-shadow:0 0 26px rgba(var(--glow),.45)}
+.auth-brand .n{font-family:var(--display);font-weight:800;font-size:1.4rem;letter-spacing:-.02em}
+.auth-brand .n span{background:linear-gradient(90deg,var(--cyan),var(--violet));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.auth-card h2{font-family:var(--display);font-size:1.3rem;font-weight:700;text-align:center;margin-bottom:6px}
+.auth-card .sub{font-size:.84rem;color:var(--txt-2);text-align:center;margin-bottom:22px}
+.auth-field{margin-bottom:14px}
+.auth-field label{display:block;font-size:.76rem;font-weight:600;color:var(--txt-2);margin-bottom:6px}
+.auth-field input{width:100%;background:var(--bg-2);border:1px solid var(--line-2);border-radius:12px;padding:12px 14px;color:var(--txt);font-size:.92rem;transition:border-color .15s}
+.auth-field input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(var(--glow),.1)}
+.auth-btn{width:100%;margin-top:6px;padding:13px;border-radius:12px;font-family:var(--display);font-weight:700;font-size:.98rem;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#05070E;box-shadow:0 10px 30px rgba(var(--glow),.3);transition:transform .2s,opacity .2s}
+.auth-btn:hover{transform:translateY(-2px)}
+.auth-btn:disabled{opacity:.6;transform:none;cursor:default}
+.auth-msg{font-size:.8rem;text-align:center;margin-top:14px;min-height:18px;line-height:1.45}
+.auth-msg.err{color:var(--red)}
+.auth-msg.ok{color:var(--green)}
+.auth-toggle{text-align:center;font-size:.84rem;color:var(--txt-2);margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+.auth-toggle a{color:var(--cyan);font-weight:600;cursor:pointer}
+.sb-logout{display:flex;align-items:center;gap:10px;font-size:.82rem;color:var(--txt-3);width:100%;padding:8px 4px;margin-top:2px;transition:color .15s}
+.sb-logout:hover{color:var(--red)}
+
 @media(min-width:768px){.tb-stats{display:flex}.stats{grid-template-columns:repeat(4,1fr)}.grid{grid-template-columns:repeat(2,1fr)}.grid.c1{grid-template-columns:1fr}}
 @media(min-width:1180px){.dash-grid{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:767px){
@@ -438,6 +476,20 @@ input,select,textarea{font-family:inherit}
   <div class="stars"></div>
 </div>
 <div class="grain"></div>
+
+<!-- LOGIN (aparece quando o Supabase está configurado) -->
+<div class="auth" id="authScreen">
+  <form class="auth-card" id="authForm" autocomplete="on">
+    <div class="auth-brand"><div class="m">⬡</div><div class="n">Central<span>Ops</span></div></div>
+    <h2 id="authTitle">Entrar na sua central</h2>
+    <div class="sub" id="authSub">Acesse sua operação de qualquer lugar</div>
+    <div class="auth-field"><label>E-mail</label><input id="authEmail" type="email" required placeholder="voce@email.com" autocomplete="email"></div>
+    <div class="auth-field"><label>Senha</label><input id="authPass" type="password" required minlength="6" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="auth-btn" id="authBtn" type="submit">Entrar</button>
+    <div class="auth-msg" id="authMsg"></div>
+    <div class="auth-toggle" id="authToggle">Ainda não tem conta? <a onclick="toggleAuthMode()">Criar conta</a></div>
+  </form>
+</div>
 
 <!-- ABERTURA -->
 <div class="intro" id="intro">
@@ -467,6 +519,7 @@ input,select,textarea{font-family:inherit}
     </nav>
     <div class="sb-foot">
       <button class="sb-backup" onclick="exportar()"><span>⬇</span> Fazer backup</button>
+      <button class="sb-logout" id="logoutBtn" onclick="logout()" style="display:none"><span>⎋</span> Sair da conta</button>
     </div>
   </aside>
 
@@ -569,9 +622,86 @@ input,select,textarea{font-family:inherit}
 <script>
 (function(){
 'use strict';
-function carregar(){try{var d=JSON.parse(localStorage.getItem('centralops_db'));if(d&&d.negocios)return d}catch(e){}return {negocios:[],produtos:[],campanhas:[],tarefas:[]}}
+
+/* ════ SUPABASE: login + banco de dados ════ */
+var CFG=window.CENTRALOPS_CONFIG||{};
+var SUPA_URL=String(CFG.SUPABASE_URL||'').trim(),SUPA_KEY=String(CFG.SUPABASE_ANON_KEY||'').trim();
+var CLOUD=!!(SUPA_URL&&SUPA_KEY&&window.supabase);
+var supa=CLOUD?window.supabase.createClient(SUPA_URL,SUPA_KEY):null;
+var USER=null,pushTimer=null;
+var LS_DB='centralops_db';
+
+function carregar(){try{var d=JSON.parse(localStorage.getItem(LS_DB));if(d&&d.negocios)return normalizeDB(d)}catch(e){}return {negocios:[],produtos:[],campanhas:[],tarefas:[]}}
+function normalizeDB(d){d=d||{};return {negocios:d.negocios||[],produtos:d.produtos||[],campanhas:d.campanhas||[],tarefas:d.tarefas||[]}}
 var DB=carregar();
-function salvar(){try{localStorage.setItem('centralops_db',JSON.stringify(DB))}catch(e){}}
+function salvarLocal(){try{localStorage.setItem(LS_DB,JSON.stringify(DB))}catch(e){}}
+function salvar(){salvarLocal();if(CLOUD&&USER){clearTimeout(pushTimer);pushTimer=setTimeout(pushCloud,800)}}
+function pushCloud(){if(!CLOUD||!USER)return;supa.from('central_ops_data').upsert({user_id:USER.id,data:DB,updated_at:new Date().toISOString()}).then(function(r){if(r&&r.error)console.warn('Supabase salvar:',r.error.message)})}
+function syncOnLogin(cb){
+  if(!CLOUD||!USER){cb&&cb();return}
+  supa.from('central_ops_data').select('data').eq('user_id',USER.id).maybeSingle().then(function(r){
+    if(r&&!r.error&&r.data&&r.data.data&&r.data.data.negocios){DB=normalizeDB(r.data.data);salvarLocal()}
+    else{pushCloud()} /* sem dados na nuvem ainda: envia o que houver local (migração/seed) */
+    cb&&cb();
+  },function(){cb&&cb()});
+}
+
+/* ════ AUTENTICAÇÃO (UI) ════ */
+var authMode='login';
+function $(id){return document.getElementById(id)}
+function setAuthMsg(t,cls){var m=$('authMsg');if(m){m.textContent=t||'';m.className='auth-msg'+(cls?' '+cls:'')}}
+function showAuth(){var a=$('authScreen');if(a)a.classList.add('show');var i=$('intro');if(i)i.style.display='none'}
+function hideAuth(){var a=$('authScreen');if(a)a.classList.remove('show')}
+window.toggleAuthMode=function(){
+  authMode=authMode==='login'?'signup':'login';
+  $('authTitle').textContent=authMode==='login'?'Entrar na sua central':'Criar sua conta';
+  $('authSub').textContent=authMode==='login'?'Acesse sua operação de qualquer lugar':'Leva 10 segundos — seus dados ficam salvos na nuvem.';
+  $('authBtn').textContent=authMode==='login'?'Entrar':'Criar conta';
+  $('authToggle').innerHTML=authMode==='login'?'Ainda não tem conta? <a onclick="toggleAuthMode()">Criar conta</a>':'Já tem conta? <a onclick="toggleAuthMode()">Entrar</a>';
+  $('authPass').setAttribute('autocomplete',authMode==='login'?'current-password':'new-password');
+  setAuthMsg('');
+};
+function traduzErroAuth(m){m=String(m||'');
+  if(/Invalid login/i.test(m))return 'E-mail ou senha incorretos.';
+  if(/already registered|already exists|User already/i.test(m))return 'Esse e-mail já tem conta. Faça login.';
+  if(/Password should|at least 6/i.test(m))return 'Senha muito curta (mínimo 6 caracteres).';
+  if(/Email not confirmed/i.test(m))return 'Confirme seu e-mail antes de entrar (verifique sua caixa de entrada).';
+  if(/rate limit|too many/i.test(m))return 'Muitas tentativas. Aguarde um instante e tente de novo.';
+  return m;
+}
+function handleAuthSubmit(e){
+  e.preventDefault();
+  if(!CLOUD){setAuthMsg('Configure o Supabase no topo do index.html para ativar o login.','err');return}
+  var email=($('authEmail').value||'').trim(),pass=$('authPass').value||'',btn=$('authBtn');
+  if(!email||pass.length<6){setAuthMsg('Informe e-mail e senha (mínimo 6 caracteres).','err');return}
+  btn.disabled=true;btn.textContent=authMode==='login'?'Entrando...':'Criando...';setAuthMsg('');
+  var p=authMode==='login'?supa.auth.signInWithPassword({email:email,password:pass}):supa.auth.signUp({email:email,password:pass});
+  p.then(function(res){
+    btn.disabled=false;btn.textContent=authMode==='login'?'Entrar':'Criar conta';
+    if(res.error){setAuthMsg(traduzErroAuth(res.error.message),'err');return}
+    if(authMode==='signup'&&res.data&&!res.data.session){setAuthMsg('Conta criada! Confirme pelo link enviado ao seu e-mail e depois faça login.','ok');authMode='login';$('authTitle').textContent='Entrar na sua central';$('authBtn').textContent='Entrar';return}
+    /* sucesso com sessão: onAuthStateChange chama onLogin */
+  },function(err){btn.disabled=false;btn.textContent=authMode==='login'?'Entrar':'Criar conta';setAuthMsg((err&&err.message)||'Erro ao autenticar.','err')});
+}
+window.logout=function(){
+  if(!CLOUD){return}
+  supa.auth.signOut().then(function(){try{localStorage.removeItem(LS_DB)}catch(e){}location.reload()});
+};
+function onLogin(session){
+  if(USER)return;USER=session.user;
+  setAuthMsg('Carregando seus dados...','ok');
+  syncOnLogin(function(){revealApp()});
+}
+function revealApp(){
+  entrou=true;
+  var i=$('intro');if(i)i.style.display='none';
+  hideAuth();
+  var lo=$('logoutBtn');if(lo)lo.style.display='flex';
+  $('app').classList.add('live');
+  gsap.set('#sidebar',{x:0,opacity:1});
+  gsap.fromTo('.content',{opacity:0,y:18},{opacity:1,y:0,duration:.5,ease:'power3.out'});
+  refresh();
+}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 var POS=(function(){try{return JSON.parse(localStorage.getItem('centralops_pos'))||{}}catch(e){return {}}})();
@@ -588,6 +718,7 @@ if(DB.negocios.length===0&&DB.produtos.length===0){
 /* ════ ABERTURA ════ */
 var entrou=false;
 function entrar(){
+  if(CLOUD)return; /* no modo nuvem, o acesso é pela tela de login */
   if(entrou)return;entrou=true;
   var tl=gsap.timeline();
   tl.to('#intro',{opacity:0,scale:1.08,duration:.7,ease:'power2.in',onComplete:function(){document.getElementById('intro').style.display='none'}});
@@ -1137,6 +1268,22 @@ function updateCounts(){
   document.getElementById('tb-camp').textContent=DB.campanhas.length;
 }
 function refresh(){updateCounts();renderDash();autoSyncCampanhas()}
+
+/* ════ INICIALIZAÇÃO DO LOGIN ════ */
+(function initAuth(){
+  var form=$('authForm');
+  if(form)form.addEventListener('submit',handleAuthSubmit);
+  if(!CLOUD)return; /* modo local: mantém a abertura cinematográfica normal */
+  showAuth(); /* esconde o intro e mostra o login enquanto verifica a sessão */
+  supa.auth.getSession().then(function(res){
+    var s=res&&res.data&&res.data.session;
+    if(s&&s.user)onLogin(s);else showAuth();
+  });
+  supa.auth.onAuthStateChange(function(evt,session){
+    if(session&&session.user){if(!USER)onLogin(session)}
+    else if(evt==='SIGNED_OUT'){USER=null}
+  });
+})();
 })();
 </script>
 </body>
