@@ -33,10 +33,12 @@ module.exports = async (req, res) => {
   if (!req.query || req.query.run !== 'centralops') {
     return res.status(400).json({ ok: false, message: 'Adicione ?run=centralops à URL para executar a configuração.' });
   }
-  const conn = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.DATABASE_URL;
+  let conn = process.env.POSTGRES_URL_NON_POOLING || process.env.POSTGRES_URL || process.env.DATABASE_URL;
   if (!conn) {
     return res.status(500).json({ ok: false, message: 'Sem string de conexão Postgres nas variáveis de ambiente.' });
   }
+  // remove sslmode da string para que nossa config ssl (rejectUnauthorized:false) seja aplicada
+  conn = conn.replace(/[?&]sslmode=[^&]*/gi, '');
   const client = new Client({ connectionString: conn, ssl: { rejectUnauthorized: false } });
   try {
     await client.connect();
