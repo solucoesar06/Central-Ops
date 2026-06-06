@@ -624,12 +624,17 @@ input,select,textarea{font-family:inherit}
 'use strict';
 
 /* ════ SUPABASE: login + banco de dados ════ */
-var CFG=window.CENTRALOPS_CONFIG||{};
-var SUPA_URL=String(CFG.SUPABASE_URL||'').trim(),SUPA_KEY=String(CFG.SUPABASE_ANON_KEY||'').trim();
-var CLOUD=!!(SUPA_URL&&SUPA_KEY&&window.supabase);
-var supa=CLOUD?window.supabase.createClient(SUPA_URL,SUPA_KEY):null;
-var USER=null,pushTimer=null;
+var CLOUD=false,supa=null,USER=null,pushTimer=null,bootResolved=false;
 var LS_DB='centralops_db';
+function ativarCloud(url,key){
+  if(CLOUD||!url||!key||!window.supabase)return;
+  supa=window.supabase.createClient(url,key);CLOUD=true;iniciarLogin();
+}
+function iniciarLogin(){
+  showAuth();
+  supa.auth.getSession().then(function(res){var s=res&&res.data&&res.data.session;if(s&&s.user)onLogin(s);else showAuth()});
+  supa.auth.onAuthStateChange(function(evt,session){if(session&&session.user){if(!USER)onLogin(session)}else if(evt==='SIGNED_OUT'){USER=null}});
+}
 
 function carregar(){try{var d=JSON.parse(localStorage.getItem(LS_DB));if(d&&d.negocios)return normalizeDB(d)}catch(e){}return {negocios:[],produtos:[],campanhas:[],tarefas:[]}}
 function normalizeDB(d){d=d||{};return {negocios:d.negocios||[],produtos:d.produtos||[],campanhas:d.campanhas||[],tarefas:d.tarefas||[]}}
@@ -719,6 +724,7 @@ if(DB.negocios.length===0&&DB.produtos.length===0){
 var entrou=false;
 function entrar(){
   if(CLOUD)return; /* no modo nuvem, o acesso é pela tela de login */
+  if(!bootResolved)return; /* espera descobrir se há Supabase configurado */
   if(entrou)return;entrou=true;
   var tl=gsap.timeline();
   tl.to('#intro',{opacity:0,scale:1.08,duration:.7,ease:'power2.in',onComplete:function(){document.getElementById('intro').style.display='none'}});
@@ -1269,20 +1275,18 @@ function updateCounts(){
 }
 function refresh(){updateCounts();renderDash();autoSyncCampanhas()}
 
-/* ════ INICIALIZAÇÃO DO LOGIN ════ */
-(function initAuth(){
-  var form=$('authForm');
-  if(form)form.addEventListener('submit',handleAuthSubmit);
-  if(!CLOUD)return; /* modo local: mantém a abertura cinematográfica normal */
-  showAuth(); /* esconde o intro e mostra o login enquanto verifica a sessão */
-  supa.auth.getSession().then(function(res){
-    var s=res&&res.data&&res.data.session;
-    if(s&&s.user)onLogin(s);else showAuth();
-  });
-  supa.auth.onAuthStateChange(function(evt,session){
-    if(session&&session.user){if(!USER)onLogin(session)}
-    else if(evt==='SIGNED_OUT'){USER=null}
-  });
+/* ════ BOOTSTRAP: descobre as credenciais do Supabase ════ */
+(function boot(){
+  var form=$('authForm');if(form)form.addEventListener('submit',handleAuthSubmit);
+  /* 1) chave colada no index.html (window.CENTRALOPS_CONFIG), se houver */
+  var c=window.CENTRALOPS_CONFIG||{};
+  var u=String(c.SUPABASE_URL||'').trim(),k=String(c.SUPABASE_ANON_KEY||'').trim();
+  if(u&&k){bootResolved=true;ativarCloud(u,k);return}
+  /* 2) senão, busca nas variáveis de ambiente da Vercel (integração Supabase) */
+  fetch('/api/config').then(function(r){return r&&r.ok?r.json():null}).then(function(cfg){
+    bootResolved=true;
+    if(cfg&&cfg.configured)ativarCloud(cfg.url,cfg.anonKey);
+  }).catch(function(){bootResolved=true});
 })();
 })();
 </script>
