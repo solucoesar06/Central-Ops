@@ -237,15 +237,13 @@ input,select,textarea{font-family:inherit}
 .dl .dlt{flex:1;color:var(--txt-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dl .dlv{font-family:var(--display);font-weight:700;color:var(--txt);flex-shrink:0;font-size:.84rem}
 .dl .dlp{font-size:.7rem;color:var(--txt-3);margin-left:3px;flex-shrink:0}
-/* ════ FUNIL META 5 ETAPAS ════ */
-.funv2{display:flex;gap:1px;margin-top:10px}
-.funv2-col{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}
-.funv2-pct{font-family:var(--display);font-weight:800;font-size:.88rem;text-align:center;line-height:1;min-height:20px;margin-bottom:4px}
-.funv2-bwrap{width:100%;height:96px;display:flex;align-items:flex-end;justify-content:center}
-.funv2-bar{width:88%;border-radius:5px 5px 0 0;min-height:5px}
-.funv2-num{font-size:.74rem;color:var(--txt-2);font-family:var(--display);font-weight:700;text-align:center;margin-top:5px}
-.funv2-lbl{font-size:.59rem;color:var(--txt-3);text-transform:uppercase;letter-spacing:.04em;text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px;width:100%}
-.funv2-sep{width:1px;background:var(--line-2);flex-shrink:0;align-self:stretch;opacity:.5;margin:20px 2px 0}
+/* ════ FUNIL META — CÍRCULOS ════ */
+.funil-circles{display:flex;align-items:flex-start;justify-content:space-around;gap:8px;flex-wrap:wrap;padding:6px 0}
+.funil-ring-wrap{position:relative;width:88px;display:flex;flex-direction:column;align-items:center}
+.funil-ring-inner{position:absolute;top:0;left:0;width:88px;height:88px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0px}
+.funil-ring-val{font-family:var(--tech);font-size:.78rem;font-weight:700;line-height:1.1}
+.funil-ring-pct{font-size:.62rem;color:var(--txt-2);line-height:1.2}
+.funil-ring-lbl{font-size:.56rem;color:var(--txt-3);line-height:1.1;margin-top:2px;text-align:center;max-width:76px}
 /* ════ TAXA DE APROVAÇÃO ════ */
 .taxa-rows{display:flex;flex-direction:column;gap:13px;margin-top:6px;flex:1}
 .taxa-r{display:flex;flex-direction:column;gap:5px}
@@ -746,20 +744,26 @@ window.logout=function(){
   if(!CLOUD){return}
   supa.auth.signOut().then(function(){try{localStorage.removeItem(LS_DB)}catch(e){}location.reload()});
 };
+var PAGE_LOAD_T=Date.now();
+var INTRO_MIN_MS=2400; /* intro leva ~1.4s para renderizar + margem para o usuário ver */
 function onLogin(session){
   if(USER)return;USER=session.user;
   setAuthMsg('Carregando seus dados...','ok');
-  syncOnLogin(function(){revealApp()});
+  syncOnLogin(function(){
+    var elapsed=Date.now()-PAGE_LOAD_T;
+    var wait=Math.max(0,INTRO_MIN_MS-elapsed);
+    setTimeout(revealApp,wait);
+  });
 }
 function revealApp(){
-  entrou=true;
-  var i=$('intro');if(i)i.style.display='none';
+  if(entrou)return;entrou=true;
   hideAuth();
   var lo=$('logoutBtn');if(lo)lo.style.display='flex';
-  $('app').classList.add('live');
-  gsap.set('#sidebar',{x:0,opacity:1});
-  gsap.fromTo('.content',{opacity:0,y:18},{opacity:1,y:0,duration:.5,ease:'power3.out'});
-  refresh();
+  var tl=gsap.timeline();
+  tl.to('#intro',{opacity:0,scale:1.08,duration:.7,ease:'power2.in',onComplete:function(){var i=$('intro');if(i)i.style.display='none'}});
+  tl.add(function(){$('app').classList.add('live')},'-=0.3');
+  tl.to('#sidebar',{x:0,opacity:1,duration:.6,ease:'power3.out'},'-=0.2');
+  tl.fromTo('.content',{opacity:0,y:18},{opacity:1,y:0,duration:.6,ease:'power3.out',onComplete:refresh},'-=0.4');
 }
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
@@ -922,7 +926,7 @@ var WIDGETS={
   kProd:{title:'Nº de produtos',span:1,accent:'var(--violet)',render:function(m){return kpi('Produtos',m.nProd,m.nProdAtivos+' ativos')}},
   kCamp:{title:'Nº de campanhas',span:1,accent:'var(--green)',render:function(m){return kpi('Campanhas',m.nCamp,m.nCampRod+' rodando')}},
   kTask:{title:'Nº de tarefas',span:1,accent:'var(--amber)',render:function(m){return kpi('Tarefas',m.nTaskPend,'pendentes')}},
-  /* ── Funil Meta 5 etapas ── */
+  /* ── Funil Meta 5 etapas — círculos ── */
   funilMeta:{title:'Funil de conversão (Meta Ads)',span:2,full:true,accent:'var(--violet)',render:function(m){
     var stages=[
       {k:'Cliques',v:m.cliques,c:'#6E8BFF'},
@@ -932,14 +936,26 @@ var WIDGETS={
       {k:'Vend. Apr.',v:m.conv,c:'#34E6A8'}
     ];
     var base=Math.max(stages[0].v,1);
-    var cols=stages.map(function(s,i){
-      var pct=i===0?100:Math.round(s.v/base*100);
-      var h=Math.max(5,Math.round(pct*0.9));
-      var sep=i<stages.length-1?'<div class="funv2-sep"></div>':'';
-      return '<div class="funv2-col"><div class="funv2-pct" style="color:'+s.c+'">'+(s.v>0||i===0?pct+'%':'—')+'</div><div class="funv2-bwrap"><div class="funv2-bar" style="height:'+h+'px;background:'+s.c+'"></div></div><div class="funv2-num">'+intBR(s.v)+'</div><div class="funv2-lbl">'+s.k+'</div></div>'+sep;
+    var R=36,C=2*Math.PI*R;
+    var rings=stages.map(function(s,i){
+      var pct=i===0?100:Math.min(100,Math.round(s.v/base*100));
+      var dash=(pct/100)*C;
+      return '<div class="funil-ring-wrap">'+
+        '<svg width="88" height="88" viewBox="0 0 88 88" style="transform:rotate(-90deg)">'+
+          '<circle cx="44" cy="44" r="'+R+'" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="6"/>'+
+          '<circle cx="44" cy="44" r="'+R+'" fill="none" stroke="'+s.c+'" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+dash.toFixed(2)+' '+C.toFixed(2)+'" style="filter:drop-shadow(0 0 5px '+s.c+')"/>'+
+        '</svg>'+
+        '<div class="funil-ring-inner">'+
+          '<span class="funil-ring-val" style="color:'+s.c+'">'+intBR(s.v)+'</span>'+
+          '<span class="funil-ring-pct">'+pct+'%</span>'+
+          '<span class="funil-ring-lbl">'+s.k+'</span>'+
+        '</div>'+
+      '</div>';
     }).join('');
     var taxa=m.cliques>0?(m.conv/m.cliques*100).toFixed(2):0;
-    return '<div class="w-h" style="margin-bottom:6px">⚗ Funil de conversão <span style="font-size:.72rem;color:var(--txt-3);font-weight:400">(Meta Ads)</span></div><div class="funv2">'+cols+'</div><div class="w-sub" style="margin-top:10px">Taxa Clique→Compra: <b style="color:var(--cyan)">'+taxa+'%</b></div>';
+    return '<div class="w-h" style="margin-bottom:10px">⚗ Funil de conversão <span style="font-size:.72rem;color:var(--txt-3);font-weight:400">(Meta Ads)</span></div>'+
+      '<div class="funil-circles">'+rings+'</div>'+
+      '<div class="w-sub" style="margin-top:10px">Taxa Clique→Compra: <b style="color:var(--cyan)">'+taxa+'%</b></div>';
   }},
   funil:{title:'Funil (simples)',span:2,accent:'var(--violet)',render:function(m){
     var max=Math.max(m.cliques,m.conv,1),taxa=m.cliques>0?(m.conv/m.cliques*100):0;
