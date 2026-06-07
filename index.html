@@ -227,6 +227,36 @@ input,select,textarea{font-family:inherit}
 .tray-chip:hover{border-color:var(--violet);color:var(--txt)}
 .tray-chip.none{border:none;background:none;color:var(--txt-3)}
 
+/* ════ DONUT — VENDAS POR PAGAMENTO ════ */
+.widget.w-full{grid-column:1/-1!important}
+.donut-wrap{display:flex;align-items:center;gap:20px;margin-top:8px;flex:1;min-height:0}
+.donut-svg{flex-shrink:0}
+.donut-legend{display:flex;flex-direction:column;gap:10px;flex:1;min-width:0}
+.dl{display:flex;align-items:center;gap:8px;font-size:.81rem}
+.dl .dlc{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.dl .dlt{flex:1;color:var(--txt-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl .dlv{font-family:var(--display);font-weight:700;color:var(--txt);flex-shrink:0;font-size:.84rem}
+.dl .dlp{font-size:.7rem;color:var(--txt-3);margin-left:3px;flex-shrink:0}
+/* ════ FUNIL META 5 ETAPAS ════ */
+.funv2{display:flex;gap:1px;margin-top:10px}
+.funv2-col{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}
+.funv2-pct{font-family:var(--display);font-weight:800;font-size:.88rem;text-align:center;line-height:1;min-height:20px;margin-bottom:4px}
+.funv2-bwrap{width:100%;height:96px;display:flex;align-items:flex-end;justify-content:center}
+.funv2-bar{width:88%;border-radius:5px 5px 0 0;min-height:5px}
+.funv2-num{font-size:.74rem;color:var(--txt-2);font-family:var(--display);font-weight:700;text-align:center;margin-top:5px}
+.funv2-lbl{font-size:.59rem;color:var(--txt-3);text-transform:uppercase;letter-spacing:.04em;text-align:center;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 2px;width:100%}
+.funv2-sep{width:1px;background:var(--line-2);flex-shrink:0;align-self:stretch;opacity:.5;margin:20px 2px 0}
+/* ════ TAXA DE APROVAÇÃO ════ */
+.taxa-rows{display:flex;flex-direction:column;gap:13px;margin-top:6px;flex:1}
+.taxa-r{display:flex;flex-direction:column;gap:5px}
+.taxa-rh{display:flex;justify-content:space-between;align-items:center}
+.taxa-rl{display:flex;align-items:center;gap:8px;font-size:.81rem;color:var(--txt-2)}
+.taxa-rl .trd{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.taxa-rv{font-family:var(--display);font-weight:800;font-size:.9rem}
+.taxa-rv.na{color:var(--txt-3);font-weight:400;font-size:.78rem}
+.taxa-tr{height:7px;background:var(--surf-2);border-radius:6px;overflow:hidden;margin-top:1px}
+.taxa-tr i{display:block;height:100%;border-radius:6px;transition:width .5s ease}
+
 .block{margin-bottom:30px}
 .block-h{font-family:var(--display);font-size:1.05rem;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:9px}
 .grid{display:grid;grid-template-columns:1fr;gap:14px}
@@ -817,26 +847,61 @@ function intBR(n){return Number(n||0).toLocaleString('pt-BR')}
 function kpi(label,value,sub,cls){return '<div class="w-lbl"><span class="dot"></span>'+esc(label)+'</div><div class="w-val'+(cls?' '+cls:'')+'">'+value+'</div>'+(sub?'<div class="w-sub">'+sub+'</div>':'')}
 
 function dashMetrics(){
-  var gasto=0,cliques=0,conv=0,orc=0,fat=0;
+  var gasto=0,cliques=0,conv=0,orc=0,fat=0,imp=0;
+  var totalCtr=0,ctrN=0,totalCpc=0,cpcN=0,totalCpm=0,cpmN=0;
+  var vendasPix=0,vendasCartao=0,vendasBoleto=0,vendasOutros=0;
+  var taxaPix=[],taxaCartao=[],taxaBoleto=[];
+  var visPagem=0,ics=0,vendasInic=0;
   DB.campanhas.forEach(function(c){
     var m=c.metricas||{};
-    gasto+=Number(m.gasto)||0;
-    cliques+=Number(m.cliques)||0;
-    var cv=Number(m.conversoes)||0;conv+=cv;
+    gasto+=Number(m.gasto)||0; cliques+=Number(m.cliques)||0; imp+=Number(m.impressoes)||0;
+    visPagem+=Number(m.visPagem)||0; ics+=Number(m.ics)||0; vendasInic+=Number(m.vendasIniciadas)||0;
+    var cv=Number(m.conversoes)||0; conv+=cv;
+    if(m.ctr!==''&&m.ctr!=null){totalCtr+=Number(m.ctr);ctrN++;}
+    if(m.cpc!==''&&m.cpc!=null){totalCpc+=Number(m.cpc);cpcN++;}
+    if(m.cpm!==''&&m.cpm!=null){totalCpm+=Number(m.cpm);cpmN++;}
+    vendasPix+=Number(m.vendasPix)||0; vendasCartao+=Number(m.vendasCartao)||0;
+    vendasBoleto+=Number(m.vendasBoleto)||0; vendasOutros+=Number(m.vendasOutros)||0;
+    if(m.taxaPix!=null&&m.taxaPix!=='')taxaPix.push(Number(m.taxaPix));
+    if(m.taxaCartao!=null&&m.taxaCartao!=='')taxaCartao.push(Number(m.taxaCartao));
+    if(m.taxaBoleto!=null&&m.taxaBoleto!=='')taxaBoleto.push(Number(m.taxaBoleto));
     if(c.status==='rodando')orc+=Number(c.orcamento)||0;
     var p=DB.produtos.find(function(x){return x.id===c.produtoId});
-    /* usa faturamento real da Meta quando disponível; senão estima por conversões × ticket */
     fat+=(m.faturamento!==''&&m.faturamento!=null)?Number(m.faturamento)||0:cv*(p?Number(p.ticket)||0:0);
   });
-  return {gasto:gasto,cliques:cliques,conv:conv,orc:orc,fat:fat,lucro:fat-gasto,
-    roas:gasto>0?fat/gasto:0,cpa:conv>0?gasto/conv:0,
-    nNeg:DB.negocios.length,nProd:DB.produtos.length,nCamp:DB.campanhas.length,
+  var avg=function(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:null};
+  var totalPag=vendasPix+vendasCartao+vendasBoleto+vendasOutros;
+  return {
+    gasto:gasto,cliques:cliques,conv:conv,orc:orc,fat:fat,imp:imp,
+    visPagem:visPagem,ics:ics,vendasInic:vendasInic,
+    lucro:fat-gasto, roas:gasto>0?fat/gasto:0, cpa:conv>0?gasto/conv:0,
+    ctr:ctrN>0?totalCtr/ctrN:0, cpc:cpcN>0?totalCpc/cpcN:0, cpm:cpmN>0?totalCpm/cpmN:0,
+    nNeg:DB.negocios.length, nProd:DB.produtos.length, nCamp:DB.campanhas.length,
     nProdAtivos:DB.produtos.filter(function(p){return p.status==='ativo'}).length,
     nCampRod:DB.campanhas.filter(function(c){return c.status==='rodando'}).length,
-    nTaskPend:DB.tarefas.filter(function(t){return !t.done}).length};
+    nTaskPend:DB.tarefas.filter(function(t){return !t.done}).length,
+    vendasPix:vendasPix, vendasCartao:vendasCartao, vendasBoleto:vendasBoleto, vendasOutros:vendasOutros, totalPag:totalPag,
+    taxaPix:avg(taxaPix), taxaCartao:avg(taxaCartao), taxaBoleto:avg(taxaBoleto),
+    ticketMedio:conv>0?fat/conv:0, margemPct:fat>0?(fat-gasto)/fat*100:0
+  };
+}
+
+/* ── helper: donut SVG ── */
+function buildDonutSVG(segs,total){
+  if(!total)return '<text x="88" y="96" text-anchor="middle" font-size="11" fill="var(--txt-3)" font-family="var(--tech)">Sem dados</text>';
+  var html='',start=-Math.PI/2,cx=88,cy=88,R=80,r=52;
+  segs.forEach(function(s){
+    if(!s.v)return;
+    var a=(s.v/total)*2*Math.PI,end=start+a,large=a>Math.PI?1:0;
+    var c1=Math.cos(start),s1=Math.sin(start),c2=Math.cos(end),s2=Math.sin(end);
+    html+='<path d="M'+(cx+R*c1).toFixed(1)+','+(cy+R*s1).toFixed(1)+' A'+R+','+R+' 0 '+large+',1 '+(cx+R*c2).toFixed(1)+','+(cy+R*s2).toFixed(1)+' L'+(cx+r*c2).toFixed(1)+','+(cy+r*s2).toFixed(1)+' A'+r+','+r+' 0 '+large+',0 '+(cx+r*c1).toFixed(1)+','+(cy+r*s1).toFixed(1)+' Z" fill="'+s.color+'"/>';
+    start=end;
+  });
+  return html;
 }
 
 var WIDGETS={
+  /* ── KPIs principais ── */
   fat:{title:'Faturamento estimado',span:1,accent:'var(--violet)',render:function(m){return kpi('Faturamento estimado',brl(m.fat),'conversões × ticket')}},
   gasto:{title:'Gastos com anúncios',span:1,accent:'var(--cyan)',render:function(m){return kpi('Gastos com anúncios',brl(m.gasto),'soma das campanhas')}},
   roas:{title:'ROAS',span:1,accent:'var(--violet)',render:function(m){return kpi('ROAS',m.roas>0?m.roas.toFixed(2)+'x':'N/A','retorno sobre anúncio')}},
@@ -845,18 +910,76 @@ var WIDGETS={
   orcamento:{title:'Orçamento por dia',span:1,accent:'var(--cyan)',render:function(m){return kpi('Orçamento / dia',brl(m.orc),m.nCampRod+' campanha(s) rodando')}},
   cliques:{title:'Cliques',span:1,accent:'var(--cyan)',render:function(m){return kpi('Cliques',intBR(m.cliques),'tráfego total')}},
   conversoes:{title:'Conversões',span:1,accent:'var(--green)',render:function(m){return kpi('Conversões',intBR(m.conv),'compras / leads')}},
+  /* ── Meta Ads metrics ── */
+  impressoes:{title:'Impressões',span:1,accent:'var(--cyan)',render:function(m){return kpi('Impressões',intBR(m.imp),'veiculações')}},
+  ctrW:{title:'CTR médio',span:1,accent:'var(--violet)',render:function(m){return kpi('CTR médio',m.ctr>0?m.ctr.toFixed(2)+'%':'N/A','taxa de clique')}},
+  cpcW:{title:'CPC médio',span:1,accent:'var(--amber)',render:function(m){return kpi('CPC médio',m.cpc>0?brl(m.cpc):'N/A','custo por clique')}},
+  cpmW:{title:'CPM médio',span:1,accent:'var(--cyan)',render:function(m){return kpi('CPM médio',m.cpm>0?brl(m.cpm):'N/A','custo por mil impressões')}},
+  ticketMedio:{title:'Ticket médio',span:1,accent:'var(--violet)',render:function(m){return kpi('Ticket médio',m.ticketMedio>0?brl(m.ticketMedio):'N/A','faturamento ÷ conversões')}},
+  margemPct:{title:'Margem líquida',span:1,accent:'var(--green)',render:function(m){return kpi('Margem líquida',m.margemPct>0?m.margemPct.toFixed(1)+'%':'N/A','(fat − gastos) ÷ fat',m.margemPct<0?'neg':(m.margemPct>0?'pos':''))}},
+  /* ── contadores ── */
   kNeg:{title:'Nº de negócios',span:1,accent:'var(--cyan)',render:function(m){return kpi('Negócios',m.nNeg,'operações')}},
   kProd:{title:'Nº de produtos',span:1,accent:'var(--violet)',render:function(m){return kpi('Produtos',m.nProd,m.nProdAtivos+' ativos')}},
   kCamp:{title:'Nº de campanhas',span:1,accent:'var(--green)',render:function(m){return kpi('Campanhas',m.nCamp,m.nCampRod+' rodando')}},
   kTask:{title:'Nº de tarefas',span:1,accent:'var(--amber)',render:function(m){return kpi('Tarefas',m.nTaskPend,'pendentes')}},
-  funil:{title:'Funil de conversão',span:2,accent:'var(--violet)',render:function(m){
+  /* ── Funil Meta 5 etapas ── */
+  funilMeta:{title:'Funil de conversão (Meta Ads)',span:2,full:true,accent:'var(--violet)',render:function(m){
+    var stages=[
+      {k:'Cliques',v:m.cliques,c:'#6E8BFF'},
+      {k:'Vis. Pág.',v:m.visPagem,c:'#8B5CF6'},
+      {k:'ICs',v:m.ics,c:'#A78BFA'},
+      {k:'Vend. Inic.',v:m.vendasInic,c:'#C084FC'},
+      {k:'Vend. Apr.',v:m.conv,c:'#34E6A8'}
+    ];
+    var base=Math.max(stages[0].v,1);
+    var cols=stages.map(function(s,i){
+      var pct=i===0?100:Math.round(s.v/base*100);
+      var h=Math.max(5,Math.round(pct*0.9));
+      var sep=i<stages.length-1?'<div class="funv2-sep"></div>':'';
+      return '<div class="funv2-col"><div class="funv2-pct" style="color:'+s.c+'">'+(s.v>0||i===0?pct+'%':'—')+'</div><div class="funv2-bwrap"><div class="funv2-bar" style="height:'+h+'px;background:'+s.c+'"></div></div><div class="funv2-num">'+intBR(s.v)+'</div><div class="funv2-lbl">'+s.k+'</div></div>'+sep;
+    }).join('');
+    var taxa=m.cliques>0?(m.conv/m.cliques*100).toFixed(2):0;
+    return '<div class="w-h" style="margin-bottom:6px">⚗ Funil de conversão <span style="font-size:.72rem;color:var(--txt-3);font-weight:400">(Meta Ads)</span></div><div class="funv2">'+cols+'</div><div class="w-sub" style="margin-top:10px">Taxa Clique→Compra: <b style="color:var(--cyan)">'+taxa+'%</b></div>';
+  }},
+  funil:{title:'Funil (simples)',span:2,accent:'var(--violet)',render:function(m){
     var max=Math.max(m.cliques,m.conv,1),taxa=m.cliques>0?(m.conv/m.cliques*100):0;
     function col(k,v,p){return '<div class="funnel-col"><div class="fn-v">'+v+'</div><div class="fn-k">'+k+'</div><div class="fn-bar"><i style="width:'+p+'%"></i></div></div>'}
-    return '<div class="w-h">⚗ Funil de conversão</div><div class="funnel">'
-      +col('Cliques',intBR(m.cliques),Math.round(m.cliques/max*100))
-      +col('Conversões',intBR(m.conv),Math.round(m.conv/max*100))
-      +'</div><div class="w-sub" style="margin-top:13px">Taxa de conversão: <b style="color:var(--cyan)">'+taxa.toFixed(1)+'%</b></div>';
+    return '<div class="w-h">⚗ Funil</div><div class="funnel">'+col('Cliques',intBR(m.cliques),Math.round(m.cliques/max*100))+col('Conversões',intBR(m.conv),Math.round(m.conv/max*100))+'</div><div class="w-sub" style="margin-top:13px">Taxa: <b style="color:var(--cyan)">'+taxa.toFixed(1)+'%</b></div>';
   }},
+  /* ── Vendas por pagamento (donut) ── */
+  vendaPag:{title:'Vendas por pagamento',span:2,accent:'var(--violet)',render:function(m){
+    var segs=[
+      {label:'Pix',v:m.vendasPix,color:'#8B5CF6'},
+      {label:'Cartão',v:m.vendasCartao,color:'#6E8BFF'},
+      {label:'Boleto',v:m.vendasBoleto,color:'#FFC24B'},
+      {label:'Outros',v:m.vendasOutros,color:'#4A4665'}
+    ];
+    var total=m.totalPag;
+    var svgPaths=buildDonutSVG(segs,total);
+    var center=total>0?'<text x="88" y="85" text-anchor="middle" font-size="10" fill="var(--txt-3)" font-family="var(--tech)">Total</text><text x="88" y="105" text-anchor="middle" font-size="22" font-weight="800" fill="var(--txt)" font-family="var(--display)">'+intBR(total)+'</text>':'<text x="88" y="96" text-anchor="middle" font-size="11" fill="var(--txt-3)" font-family="var(--tech)">Sem dados</text>';
+    var svg='<svg class="donut-svg" viewBox="0 0 176 176" width="148" height="148">'+svgPaths+center+'</svg>';
+    var legend=segs.map(function(s){
+      var pct=total>0?Math.round(s.v/total*100):0;
+      return '<div class="dl"><span class="dlc" style="background:'+s.color+'"></span><span class="dlt">'+s.label+'</span><span class="dlv">'+intBR(s.v)+'</span><span class="dlp">'+(total>0?pct+'%':'')+'</span></div>';
+    }).join('');
+    return '<div class="w-h" style="margin-bottom:2px">Vendas por Pagamento</div><div class="donut-wrap">'+svg+'<div class="donut-legend">'+legend+'</div></div>';
+  }},
+  /* ── Taxa de aprovação ── */
+  taxaAprov:{title:'Taxa de aprovação',span:2,accent:'var(--cyan)',render:function(m){
+    var rows=[
+      {label:'Cartão',color:'#6E8BFF',taxa:m.taxaCartao},
+      {label:'Pix',color:'#8B5CF6',taxa:m.taxaPix},
+      {label:'Boleto',color:'#FFC24B',taxa:m.taxaBoleto}
+    ];
+    var html=rows.map(function(r){
+      var temDado=r.taxa!=null;
+      var pct=temDado?Number(r.taxa).toFixed(1)+'%':'N/A';
+      var w=temDado?Math.min(100,Number(r.taxa))+'%':'0%';
+      return '<div class="taxa-r"><div class="taxa-rh"><div class="taxa-rl"><span class="trd" style="background:'+r.color+'"></span>'+r.label+'</div><div class="taxa-rv'+(temDado?'':' na')+'">'+pct+'</div></div><div class="taxa-tr"><i style="width:'+w+';background:'+r.color+'"></i></div></div>';
+    }).join('');
+    return '<div class="w-h" style="margin-bottom:4px">Taxa de Aprovação</div><div class="taxa-rows">'+html+'</div><div class="w-sub" style="margin-top:8px;font-size:.72rem">Preencha em cada campanha → "Vendas por método"</div>';
+  }},
+  /* ── Listas ── */
   statusProd:{title:'Produtos por status',span:1,accent:'var(--violet)',render:function(m){
     var st=[{k:'Ativo',n:DB.produtos.filter(function(p){return p.status==='ativo'}).length,c:'g'},
             {k:'Produção',n:DB.produtos.filter(function(p){return p.status==='producao'}).length,c:'a'},
@@ -890,19 +1013,19 @@ var WIDGETS={
   }}
 };
 
-var DASH_DEFAULT=['fat','gasto','roas','lucro','funil','statusProd','cpa','orcamento','campRod','foco'];
+var DASH_DEFAULT=['fat','gasto','roas','lucro','funilMeta','vendaPag','taxaAprov','cpa','orcamento','campRod','foco'];
 function getDashOrder(){
-  try{var s=JSON.parse(localStorage.getItem('centralops_dash_v1'));if(s&&s.length)return s.filter(function(id){return WIDGETS[id]})}catch(e){}
+  try{var s=JSON.parse(localStorage.getItem('centralops_dash_v2'));if(s&&s.length)return s.filter(function(id){return WIDGETS[id]})}catch(e){}
   return DASH_DEFAULT.slice();
 }
-function setDashOrder(o){try{localStorage.setItem('centralops_dash_v1',JSON.stringify(o))}catch(e){}}
+function setDashOrder(o){try{localStorage.setItem('centralops_dash_v2',JSON.stringify(o))}catch(e){}}
 
 var dashEditing=false,dashSortable=null;
 function buildWidget(id,m){
   var w=WIDGETS[id];if(!w)return null;
   var el=document.createElement('div');
-  el.className='widget';el.dataset.wid=id;
-  el.style.setProperty('--span',w.span||1);
+  el.className='widget'+(w.full?' w-full':'');el.dataset.wid=id;
+  el.style.setProperty('--span',w.full?4:(w.span||1));
   if(w.accent)el.style.setProperty('--w-accent',w.accent);
   el.innerHTML='<div class="w-tools"><button class="w-grip" title="Arraste para mover">⠿</button><button class="w-hide" title="Ocultar bloco" onclick="hideWidget(\''+id+'\')">✕</button></div>'+w.render(m);
   return el;
@@ -1264,8 +1387,25 @@ window.processAssetFile=function(input){var file=input.files&&input.files[0],row
 window.salvarProduto=function(id){var nome=val('f-nome');if(!nome){toast('Dê um nome');return}var assets=[];document.querySelectorAll('#assets-box .asset-row').forEach(function(r){var t=r.querySelector('.a-tipo').value,n=r.querySelector('.a-nome').value,u=r.querySelector('.a-url').value,d=r.querySelector('.a-data').value,m=r.querySelector('.a-mime').value,f=r.querySelector('.a-file').value;if(n||u||d)assets.push({tipo:t,nome:n||f||t,url:u,dataUrl:d,mime:m,fileName:f})});var obj={nome:nome,negocioId:val('f-negocio'),status:val('f-status'),ticket:val('f-ticket'),plataforma:val('f-plataforma'),assets:assets};if(id)Object.assign(DB.produtos.find(function(x){return x.id===id}),obj);else{obj.id=uid();DB.produtos.push(obj);if(PENDING_POS){POS['prod_'+obj.id]=PENDING_POS;PENDING_POS=null;}}salvar();fecharModal();afterChange('produtos');toast('Produto salvo ✓')};
 window.delProduto=function(id){if(!confirm('Excluir produto?'))return;DB.produtos=DB.produtos.filter(function(x){return x.id!==id});salvar();fecharPainel();afterChange('produtos');toast('Excluído')};
 
-window.abrirModalCampanha=function(id){var c=id?DB.campanhas.find(function(x){return x.id===id}):{autoSync:true};var m=c.metricas||{};ov.innerHTML='<div class="modal"><h3>'+(id?'Editar':'Nova')+' campanha <span class="x" onclick="fecharModal()">✕</span></h3><div class="field"><label>Nome</label><input id="f-nome" value="'+esc(c.nome||'')+'" placeholder="Ex: Educando - Conversão"></div><div class="field"><label>Produto</label>'+selProd(c.produtoId)+'</div><div class="field"><label>Status</label><select id="f-status">'+optStatus('teste','Em teste',c.status)+optStatus('rodando','Rodando',c.status)+optStatus('pausado','Pausada',c.status)+'</select></div><div class="field"><label>Plataforma</label><input id="f-plataforma" value="'+esc(c.plataforma||'')+'" placeholder="Meta Ads"></div><div class="field"><label>Orçamento diário (R$)</label><input id="f-orcamento" value="'+esc(c.orcamento||'')+'" placeholder="50"></div><div class="field"><label>CPA atual (R$)</label><input id="f-cpa" value="'+esc(c.cpa||'')+'" placeholder="15"></div><div class="field"><label>Criativo ativo</label><input id="f-criativo" value="'+esc(c.criativo||'')+'" placeholder="Ex: Vídeo gancho v2"></div><div class="sync-box"><div class="sync-title">Integração automática com a Meta</div><div class="sync-help">Cole o <b>Campaign ID</b> + <b>Token</b> da Meta. Os dados são buscados com segurança pelo servidor (sem precisar abrir o Gerenciador). O token fica salvo só neste navegador.</div><details class="howto"><summary>Como conseguir o Campaign ID e o Token da Meta?</summary><div class="howto-body"><ol><li><b>Campaign ID:</b> abra o <a href="https://adsmanager.facebook.com/adsmanager/manage/campaigns" target="_blank" rel="noopener">Gerenciador de Anúncios</a>, vá em <b>Campanhas</b> e copie o número da coluna <code>Identificação</code> (ID) da campanha. Se a coluna não aparecer, ative em <i>Colunas → Personalizar</i>.</li><li>Abra o <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Explorador da Graph API</a>. Se ainda não tiver um app, crie um gratuito em <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a> (tipo <i>Empresa</i>).</li><li>No Explorador, selecione seu app no topo, clique em <b>Add a Permission</b> e marque <code>ads_read</code>.</li><li>Clique em <b>Generate Access Token</b> e autorize o acesso à sua conta de anúncios. Copie o token que aparecer.</li><li>Cole o <b>Campaign ID</b> e o <b>Token</b> nos campos abaixo e salve. Pronto — as métricas passam a ser puxadas automaticamente. 🎉</li></ol><div class="howto-tip">⏱ <b>Token sem validade:</b> o token do Explorador expira em ~1 a 2 horas. Para um token que <b>não expira</b>, crie um <a href="https://business.facebook.com/settings/system-users" target="_blank" rel="noopener">Usuário do Sistema</a> em <i>Configurações do Negócio</i>, atribua sua conta de anúncios e gere um token com a permissão <code>ads_read</code>.</div></div></details><div class="sync-grid"><div class="field"><label>Campaign ID da Meta</label><input id="f-meta-campaign" value="'+esc(c.metaCampaignId||'')+'" placeholder="120000000000000"></div><div class="field"><label>Token de acesso Meta</label><input id="f-meta-token" value="'+esc(c.metaAccessToken||'')+'" placeholder="EAAB..."></div><div class="field"><label>URL de métricas externa (opcional)</label><input id="f-meta-url" value="'+esc(c.metaApiUrl||'')+'" placeholder="https://seu-backend.com/meta/campanha/123"></div></div><div class="field"><label><input id="f-auto-sync" type="checkbox" '+(c.autoSync?'checked':'')+' style="width:auto;margin-right:7px"> atualizar automaticamente ao abrir</label></div>'+(m.atualizadoEm?'<div class="sync-status ok">Última leitura: '+esc(dataCurta(m.atualizadoEm))+'</div>':'')+'</div><div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>'+(id?'<button class="btn btn-sync" onclick="salvarCampanha(\''+id+'\',true)">Buscar dados</button>':'')+'<button class="btn btn-primary" onclick="salvarCampanha(\''+(id||'')+'\')">Salvar</button></div></div>';ov.classList.add('open')};
-window.salvarCampanha=function(id,syncDepois){var nome=val('f-nome');if(!nome){toast('Dê um nome');return}var obj={nome:nome,produtoId:val('f-produto'),status:val('f-status'),plataforma:val('f-plataforma'),orcamento:val('f-orcamento'),cpa:val('f-cpa'),criativo:val('f-criativo'),metaCampaignId:val('f-meta-campaign'),metaAccessToken:val('f-meta-token'),metaApiUrl:val('f-meta-url'),autoSync:!!document.getElementById('f-auto-sync')&&document.getElementById('f-auto-sync').checked};var camp;if(id){camp=DB.campanhas.find(function(x){return x.id===id});Object.assign(camp,obj)}else{obj.id=uid();DB.campanhas.push(obj);camp=obj;if(PENDING_POS){POS['camp_'+obj.id]=PENDING_POS;PENDING_POS=null;}}salvar();if(syncDepois){atualizarCampanhaMeta(camp.id,true);return}fecharModal();afterChange('campanhas');toast('Campanha salva ✓')};
+window.abrirModalCampanha=function(id){var c=id?DB.campanhas.find(function(x){return x.id===id}):{autoSync:true};var m=c.metricas||{};ov.innerHTML='<div class="modal"><h3>'+(id?'Editar':'Nova')+' campanha <span class="x" onclick="fecharModal()">✕</span></h3><div class="field"><label>Nome</label><input id="f-nome" value="'+esc(c.nome||'')+'" placeholder="Ex: Educando - Conversão"></div><div class="field"><label>Produto</label>'+selProd(c.produtoId)+'</div><div class="field"><label>Status</label><select id="f-status">'+optStatus('teste','Em teste',c.status)+optStatus('rodando','Rodando',c.status)+optStatus('pausado','Pausada',c.status)+'</select></div><div class="field"><label>Plataforma</label><input id="f-plataforma" value="'+esc(c.plataforma||'')+'" placeholder="Meta Ads"></div><div class="field"><label>Orçamento diário (R$)</label><input id="f-orcamento" value="'+esc(c.orcamento||'')+'" placeholder="50"></div><div class="field"><label>CPA atual (R$)</label><input id="f-cpa" value="'+esc(c.cpa||'')+'" placeholder="15"></div><div class="field"><label>Criativo ativo</label><input id="f-criativo" value="'+esc(c.criativo||'')+'" placeholder="Ex: Vídeo gancho v2"></div><div class="sync-box"><div class="sync-title">Integração automática com a Meta</div><div class="sync-help">Cole o <b>Campaign ID</b> + <b>Token</b> da Meta. Os dados são buscados com segurança pelo servidor (sem precisar abrir o Gerenciador). O token fica salvo só neste navegador.</div><details class="howto"><summary>Como conseguir o Campaign ID e o Token da Meta?</summary><div class="howto-body"><ol><li><b>Campaign ID:</b> abra o <a href="https://adsmanager.facebook.com/adsmanager/manage/campaigns" target="_blank" rel="noopener">Gerenciador de Anúncios</a>, vá em <b>Campanhas</b> e copie o número da coluna <code>Identificação</code> (ID) da campanha. Se a coluna não aparecer, ative em <i>Colunas → Personalizar</i>.</li><li>Abra o <a href="https://developers.facebook.com/tools/explorer/" target="_blank" rel="noopener">Explorador da Graph API</a>. Se ainda não tiver um app, crie um gratuito em <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener">Meta for Developers</a> (tipo <i>Empresa</i>).</li><li>No Explorador, selecione seu app no topo, clique em <b>Add a Permission</b> e marque <code>ads_read</code>.</li><li>Clique em <b>Generate Access Token</b> e autorize o acesso à sua conta de anúncios. Copie o token que aparecer.</li><li>Cole o <b>Campaign ID</b> e o <b>Token</b> nos campos abaixo e salve. Pronto — as métricas passam a ser puxadas automaticamente. 🎉</li></ol><div class="howto-tip">⏱ <b>Token sem validade:</b> o token do Explorador expira em ~1 a 2 horas. Para um token que <b>não expira</b>, crie um <a href="https://business.facebook.com/settings/system-users" target="_blank" rel="noopener">Usuário do Sistema</a> em <i>Configurações do Negócio</i>, atribua sua conta de anúncios e gere um token com a permissão <code>ads_read</code>.</div></div></details><div class="sync-grid"><div class="field"><label>Campaign ID da Meta</label><input id="f-meta-campaign" value="'+esc(c.metaCampaignId||'')+'" placeholder="120000000000000"></div><div class="field"><label>Token de acesso Meta</label><input id="f-meta-token" value="'+esc(c.metaAccessToken||'')+'" placeholder="EAAB..."></div><div class="field"><label>URL de métricas externa (opcional)</label><input id="f-meta-url" value="'+esc(c.metaApiUrl||'')+'" placeholder="https://seu-backend.com/meta/campanha/123"></div></div><div class="field"><label><input id="f-auto-sync" type="checkbox" '+(c.autoSync?'checked':'')+' style="width:auto;margin-right:7px"> atualizar automaticamente ao abrir</label></div>'+(m.atualizadoEm?'<div class="sync-status ok">Última leitura: '+esc(dataCurta(m.atualizadoEm))+'</div>':'')+'</div><div class="sync-box" style="margin-top:8px"><div class="sync-title" style="color:var(--violet)">Vendas por método de pagamento</div><div class="sync-help">Preencha manualmente (Kiwify, Hotmart, etc.). Alimenta os widgets "Vendas por Pagamento" e "Taxa de Aprovação".</div><div class="sync-grid" style="grid-template-columns:1fr 1fr"><div class="field"><label>Pix</label><input id="f-v-pix" type="number" min="0" placeholder="0" value="'+esc(m.vendasPix||0)+'"></div><div class="field"><label>Cartão</label><input id="f-v-cart" type="number" min="0" placeholder="0" value="'+esc(m.vendasCartao||0)+'"></div><div class="field"><label>Boleto</label><input id="f-v-bol" type="number" min="0" placeholder="0" value="'+esc(m.vendasBoleto||0)+'"></div><div class="field"><label>Outros</label><input id="f-v-out" type="number" min="0" placeholder="0" value="'+esc(m.vendasOutros||0)+'"></div></div><div class="sync-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:0"><div class="field"><label>Taxa Cartão %</label><input id="f-t-cart" type="number" min="0" max="100" step="0.1" placeholder="85" value="'+esc(m.taxaCartao!=null?m.taxaCartao:'')+'"></div><div class="field"><label>Taxa Pix %</label><input id="f-t-pix" type="number" min="0" max="100" step="0.1" placeholder="95" value="'+esc(m.taxaPix!=null?m.taxaPix:'')+'"></div><div class="field"><label>Taxa Boleto %</label><input id="f-t-bol" type="number" min="0" max="100" step="0.1" placeholder="70" value="'+esc(m.taxaBoleto!=null?m.taxaBoleto:'')+'"></div></div><div class="sync-title" style="margin-top:10px;color:var(--txt-3)">Funil manual (se Meta não retornar)</div><div class="sync-grid" style="grid-template-columns:1fr 1fr 1fr;margin-top:4px"><div class="field"><label>Vis. Página</label><input id="f-v-visp" type="number" min="0" placeholder="0" value="'+esc(m.visPagem||0)+'"></div><div class="field"><label>Iníc. Checkout (ICs)</label><input id="f-v-ics" type="number" min="0" placeholder="0" value="'+esc(m.ics||0)+'"></div><div class="field"><label>Vend. Iniciadas</label><input id="f-v-vini" type="number" min="0" placeholder="0" value="'+esc(m.vendasIniciadas||0)+'"></div></div></div><div class="modal-actions"><button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>'+(id?'<button class="btn btn-sync" onclick="salvarCampanha(\''+id+'\',true)">Buscar dados</button>':'')+'<button class="btn btn-primary" onclick="salvarCampanha(\''+(id||'')+'\')">Salvar</button></div></div>';ov.classList.add('open')};
+window.salvarCampanha=function(id,syncDepois){var nome=val('f-nome');if(!nome){toast('Dê um nome');return}var obj={nome:nome,produtoId:val('f-produto'),status:val('f-status'),plataforma:val('f-plataforma'),orcamento:val('f-orcamento'),cpa:val('f-cpa'),criativo:val('f-criativo'),metaCampaignId:val('f-meta-campaign'),metaAccessToken:val('f-meta-token'),metaApiUrl:val('f-meta-url'),autoSync:!!document.getElementById('f-auto-sync')&&document.getElementById('f-auto-sync').checked};var camp;if(id){camp=DB.campanhas.find(function(x){return x.id===id});Object.assign(camp,obj)}else{obj.id=uid();DB.campanhas.push(obj);camp=obj;if(PENDING_POS){POS['camp_'+obj.id]=PENDING_POS;PENDING_POS=null;}}
+  /* salvar campos de pagamento/funil manual */
+  var pm=camp.metricas||{};
+  var fvp=document.getElementById('f-v-pix'),fvc=document.getElementById('f-v-cart'),fvb=document.getElementById('f-v-bol'),fvo=document.getElementById('f-v-out');
+  var ftc=document.getElementById('f-t-cart'),ftp=document.getElementById('f-t-pix'),ftb=document.getElementById('f-t-bol');
+  var fvvp=document.getElementById('f-v-visp'),fvic=document.getElementById('f-v-ics'),fvvi=document.getElementById('f-v-vini');
+  if(fvp)pm.vendasPix=Number(fvp.value)||0;
+  if(fvc)pm.vendasCartao=Number(fvc.value)||0;
+  if(fvb)pm.vendasBoleto=Number(fvb.value)||0;
+  if(fvo)pm.vendasOutros=Number(fvo.value)||0;
+  if(ftc&&ftc.value!=='')pm.taxaCartao=Number(ftc.value); else if(!ftc)delete pm.taxaCartao;
+  if(ftp&&ftp.value!=='')pm.taxaPix=Number(ftp.value); else if(!ftp)delete pm.taxaPix;
+  if(ftb&&ftb.value!=='')pm.taxaBoleto=Number(ftb.value); else if(!ftb)delete pm.taxaBoleto;
+  if(fvvp&&Number(fvvp.value))pm.visPagem=Number(fvvp.value);
+  if(fvic&&Number(fvic.value))pm.ics=Number(fvic.value);
+  if(fvvi&&Number(fvvi.value))pm.vendasIniciadas=Number(fvvi.value);
+  camp.metricas=pm;
+  salvar();if(syncDepois){atualizarCampanhaMeta(camp.id,true);return}fecharModal();afterChange('campanhas');toast('Campanha salva ✓')};
 window.atualizarCampanhaMeta=function(id,manterModal){var c=DB.campanhas.find(function(x){return x.id===id});if(!c)return;if(!c.metaApiUrl&&(!c.metaCampaignId||!c.metaAccessToken)){toast('Informe Campaign ID + token ou URL');return}toast('Buscando métricas...');buscarMetricasCampanha(c).then(function(dados){aplicarMetricasMeta(c,dados);salvar();if(manterModal)abrirModalCampanha(id);else afterChange('campanhas');toast('Métricas atualizadas ✓')}).catch(function(err){toast((err&&err.message)||'Erro ao buscar métricas')})};
 function buscarMetricasCampanha(c){
   var per=CAMP_PERIODO||'last_30d';
@@ -1298,8 +1438,23 @@ function aplicarMetricasMeta(c,d){
   else if(d.orcamento)c.orcamento=String(d.orcamento);
   if(cpa)c.cpa=Number(cpa).toFixed(2);
   else if(d.cpa)c.cpa=String(d.cpa);
-  c.metricas={gasto:num(ins.spend||d.gasto),impressoes:num(ins.impressions||d.impressoes),cliques:num(ins.clicks||d.cliques),ctr:ins.ctr?Number(ins.ctr).toFixed(2):(d.ctr||''),cpc:num(ins.cpc||d.cpc),cpm:num(ins.cpm||d.cpm),conversoes:conv||num(d.conversoes),faturamento:(fat||num(d.faturamento)),cpa:cpa?Number(cpa).toFixed(2):(d.cpa||''),periodo:CAMP_PERIODO,atualizadoEm:new Date().toISOString()};
+  var prev=c.metricas||{};
+  /* métricas da Meta — funnel avançado */
+  var visPag=acharAcaoEsp(ins.actions,'landing_page_view')||num(ins.landing_page_views)||prev.visPagem||0;
+  var icsV=acharAcaoEsp(ins.actions,'initiate_checkout')||prev.ics||0;
+  var vIni=acharAcaoEsp(ins.actions,'add_payment_info')||prev.vendasIniciadas||0;
+  c.metricas=Object.assign({},
+    /* preserva campos manuais de pagamento */
+    {vendasPix:prev.vendasPix||0,vendasCartao:prev.vendasCartao||0,vendasBoleto:prev.vendasBoleto||0,vendasOutros:prev.vendasOutros||0,taxaPix:prev.taxaPix,taxaCartao:prev.taxaCartao,taxaBoleto:prev.taxaBoleto},
+    /* sobrescreve com dados da Meta */
+    {gasto:num(ins.spend||d.gasto),impressoes:num(ins.impressions||d.impressoes),cliques:num(ins.clicks||d.cliques),
+     ctr:ins.ctr?Number(ins.ctr).toFixed(2):(d.ctr||''),cpc:num(ins.cpc||d.cpc),cpm:num(ins.cpm||d.cpm),
+     conversoes:conv||num(d.conversoes),faturamento:(fat||num(d.faturamento)),cpa:cpa?Number(cpa).toFixed(2):(d.cpa||''),
+     visPagem:visPag,ics:icsV,vendasIniciadas:vIni,
+     periodo:CAMP_PERIODO,atualizadoEm:new Date().toISOString()}
+  );
 }
+function acharAcaoEsp(arr,key){arr=arr||[];var a=arr.find(function(x){return x.action_type===key});return a?Number(a.value):0}
 function acharAcao(arr){arr=arr||[];var keys=['purchase','offsite_conversion.fb_pixel_purchase','lead','onsite_conversion.lead_grouped','complete_registration'];for(var i=0;i<keys.length;i++){var a=arr.find(function(x){return x.action_type===keys[i]});if(a)return Number(a.value)}return 0}
 function acharCusto(arr){arr=arr||[];var keys=['purchase','offsite_conversion.fb_pixel_purchase','lead','onsite_conversion.lead_grouped','complete_registration'];for(var i=0;i<keys.length;i++){var a=arr.find(function(x){return x.action_type===keys[i]});if(a)return a.value}return ''}
 function acharValor(arr){arr=arr||[];var keys=['purchase','offsite_conversion.fb_pixel_purchase','omni_purchase'];for(var i=0;i<keys.length;i++){var a=arr.find(function(x){return x.action_type===keys[i]});if(a)return Number(a.value)}return 0}
