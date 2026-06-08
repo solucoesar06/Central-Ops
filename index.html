@@ -680,7 +680,11 @@ var CLOUD=false,supa=null,USER=null,pushTimer=null,bootResolved=false;
 var LS_DB='centralops_db';
 function ativarCloud(url,key){
   if(CLOUD||!url||!key||!window.supabase)return;
-  supa=window.supabase.createClient(url,key);CLOUD=true;iniciarLogin();
+  supa=window.supabase.createClient(url,key);CLOUD=true;
+  /* No modo nuvem, NUNCA expor/usar o DB local pré-login (pode ser de outra conta
+     que usou este navegador). A nuvem é a fonte de verdade; zera até o login. */
+  DB=normalizeDB({});POS=DB.teiaLayout;
+  iniciarLogin();
 }
 function iniciarLogin(){
   showAuth();
@@ -691,14 +695,23 @@ function iniciarLogin(){
 function carregar(){try{var d=JSON.parse(localStorage.getItem(LS_DB));if(d&&d.negocios)return normalizeDB(d)}catch(e){}return {negocios:[],produtos:[],campanhas:[],tarefas:[],teiaLayout:{},teiaView:null}}
 function normalizeDB(d){d=d||{};return {negocios:d.negocios||[],produtos:d.produtos||[],campanhas:d.campanhas||[],tarefas:d.tarefas||[],teiaLayout:d.teiaLayout||{},teiaView:d.teiaView||null}}
 var DB=carregar();
-function salvarLocal(){try{localStorage.setItem(LS_DB,JSON.stringify(DB))}catch(e){}}
+/* Chave de cache local: no modo nuvem é por-usuário, para duas contas no mesmo
+   navegador NUNCA compartilharem dados. No modo local, chave única. */
+function lsKey(){return (CLOUD&&USER)?('centralops_db_'+USER.id):LS_DB}
+function salvarLocal(){try{localStorage.setItem(lsKey(),JSON.stringify(DB))}catch(e){}}
 function salvar(){salvarLocal();if(CLOUD&&USER){clearTimeout(pushTimer);pushTimer=setTimeout(pushCloud,800)}}
 function pushCloud(){if(!CLOUD||!USER)return;supa.from('central_ops_data').upsert({user_id:USER.id,data:DB,updated_at:new Date().toISOString()}).then(function(r){if(r&&r.error)console.warn('Supabase salvar:',r.error.message)})}
 function syncOnLogin(cb){
   if(!CLOUD||!USER){cb&&cb();return}
   supa.from('central_ops_data').select('data').eq('user_id',USER.id).maybeSingle().then(function(r){
-    if(r&&!r.error&&r.data&&r.data.data&&r.data.data.negocios){DB=normalizeDB(r.data.data);POS=DB.teiaLayout;salvarLocal()}
-    else{pushCloud()} /* sem dados na nuvem ainda: envia o que houver local (migração/seed) */
+    if(r&&!r.error&&r.data&&r.data.data&&r.data.data.negocios){
+      DB=normalizeDB(r.data.data); /* conta existente: usa SÓ os dados desta conta */
+    }else{
+      /* Conta nova/vazia: começa LIMPA com exemplos próprios.
+         Nunca herda o DB local de um login anterior (era o bug do vazamento). */
+      DB=seedDB();pushCloud();
+    }
+    POS=DB.teiaLayout;salvarLocal();
     cb&&cb();
   },function(){cb&&cb()});
 }
@@ -742,7 +755,10 @@ function handleAuthSubmit(e){
 }
 window.logout=function(){
   if(!CLOUD){return}
-  supa.auth.signOut().then(function(){try{localStorage.removeItem(LS_DB)}catch(e){}location.reload()});
+  /* Limpa o cache local desta conta E a chave genérica, para não sobrar nada
+     que possa vazar para o próximo login neste navegador. */
+  try{localStorage.removeItem(lsKey());localStorage.removeItem(LS_DB)}catch(e){}
+  supa.auth.signOut().then(function(){location.reload()});
 };
 var PAGE_LOAD_T=Date.now();
 var INTRO_MIN_MS=2400; /* intro leva ~1.4s para renderizar + margem para o usuário ver */
@@ -770,12 +786,20 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return
 var POS=DB.teiaLayout;
 function salvarPos(){salvar();}
 
-if(DB.negocios.length===0&&DB.produtos.length===0){
+/* Gera um DB novo com exemplos — usado para contas novas (local ou nuvem). */
+function seedDB(){
   var n1=uid(),n2=uid(),p1=uid();
-  DB.negocios=[{id:n1,nome:'Educando',nicho:'Material pedagógico',emoji:'📚',obs:''},{id:n2,nome:'Pro Service',nicho:'Gases industriais',emoji:'⚙️',obs:''}];
-  DB.produtos=[{id:p1,nome:'Plataforma Educando',negocioId:n1,status:'ativo',ticket:'27',plataforma:'Cakto',assets:[]},{id:uid(),nome:'Kit Eletricista',negocioId:n1,status:'producao',ticket:'27',plataforma:'Cakto',assets:[]}];
-  DB.campanhas=[{id:uid(),nome:'Educando - Conversão',produtoId:p1,status:'rodando',plataforma:'Meta',orcamento:'50',cpa:'30',criativo:'Vídeo dor v1'}];
-  salvar();
+  return {
+    negocios:[{id:n1,nome:'Educando',nicho:'Material pedagógico',emoji:'📚',obs:''},{id:n2,nome:'Pro Service',nicho:'Gases industriais',emoji:'⚙️',obs:''}],
+    produtos:[{id:p1,nome:'Plataforma Educando',negocioId:n1,status:'ativo',ticket:'27',plataforma:'Cakto',assets:[]},{id:uid(),nome:'Kit Eletricista',negocioId:n1,status:'producao',ticket:'27',plataforma:'Cakto',assets:[]}],
+    campanhas:[{id:uid(),nome:'Educando - Conversão',produtoId:p1,status:'rodando',plataforma:'Meta',orcamento:'50',cpa:'30',criativo:'Vídeo dor v1'}],
+    tarefas:[],teiaLayout:{},teiaView:null
+  };
+}
+/* Semeia exemplos APENAS no modo local (sem nuvem). No modo nuvem, cada conta é
+   semeada por-usuário dentro de syncOnLogin — nunca a partir do DB compartilhado. */
+if(!CLOUD&&DB.negocios.length===0&&DB.produtos.length===0){
+  DB=seedDB();POS=DB.teiaLayout;salvar();
 }
 
 /* ════ ABERTURA ════ */
